@@ -1,0 +1,57 @@
+---
+description: Constitución YAGNI para artefactos SDD (WORKFLOW, Paso 0, docs/sdd, deliverables)
+globs: WORKFLOW.yaml, paso0/**, docs/sdd/**, deliverables/**
+alwaysApply: true
+---
+
+# Forge SDD — constitución local
+
+Aplica al editar artefactos SDD en la raíz del workspace del proyecto.
+
+## Jerarquía de verdad
+
+1. `WORKFLOW.yaml` — fase y gates
+2. `paso0/decisions.catalog.json` — D-IDs vinculantes
+3. `paso0/domain-benchmark.md` — lectura humana + gobierno
+4. `docs/sdd/mdd.md` — constitución técnica (gana sobre spec en conflicto de diseño)
+5. `docs/sdd/spec.md` — requisitos funcionales
+
+## YAGNI
+
+- No inventar tablas, endpoints ni stacks no citados en Paso 0 o Spec.
+- MDD: 7 secciones canónicas; contenido mínimo al alcance.
+- §4.A (API del producto) antes de §4.B (integraciones externas).
+- Glosario: solo términos ya usados en alcance o mensajes del usuario.
+
+## Paso 0
+
+- Toda regla vinculante lleva **D-XXX** en benchmark y en `decisions.catalog.json`.
+- `kind` debe ser `paso0_decision_catalog`, `version` = `1`.
+- Sincronizar benchmark ↔ JSON tras cada edición sustantiva.
+
+## Spec
+
+- Sin stack tecnológico (eso va al MDD §2).
+- Marcar `[NEEDS CLARIFICATION]` solo si bloquea diseño; resolver antes de `/forge-mdd`.
+
+## Gates
+
+Antes de marcar un gate `passed` en `WORKFLOW.yaml`:
+
+1. Ejecutar `npm run validate:paso0-coverage` (desde la raíz del workspace SDD).
+2. Tras `/forge-prepare-output`, ejecutar `/forge-paso0-coverage-remediation`.
+3. `gates.paso0_mdd_coverage` debe estar `passed` (0 blockers, umbrales 100 %).
+4. `gates.mdd` **depende** de `paso0_mdd_coverage`; no aprobar MDD con D-IDs MVP/confirmada solo en Paso 0.
+5. Verificar trazabilidad D-ID en spec y paridad entidades/spec ↔ mdd §3.
+
+## Cobertura Paso 0 → MDD
+
+- Ningún D-ID con `classification: MVP` o `assertionType: Decisión confirmada` puede existir **solo** en catálogo o benchmark.
+- Debe materializarse en la sección MDD dedicada o en la matriz §9 Trazabilidad.
+- Con catálogo Paso 0: §0 patrones, §8 UI/UX, §9 Trazabilidad y §10 Registro de cambios son obligatorios en `mdd.md`.
+
+## Prohibido
+
+- Llamar a The Forge API para generar estos artefactos en este flujo local.
+- Copiar instrucciones internas de prompts al cuerpo del MDD.
+- Añadir `Co-authored-by` de agentes IA en commits.

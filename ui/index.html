@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Forge SDD — Panel de flujo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <div class="header__brand">
+          <span class="logo" aria-hidden="true">⚒</span>
+          <div>
+            <h1>Forge SDD</h1>
+            <p class="subtitle">Panel local · sin API de The Forge</p>
+          </div>
+        </div>
+        <div class="header__actions">
+          <label class="toggle" title="Actualizar cada 5 segundos">
+            <input type="checkbox" id="auto-refresh" checked />
+            <span>Auto-refresh</span>
+          </label>
+          <button type="button" id="refresh-btn" class="btn btn--ghost">Actualizar</button>
+        </div>
+      </header>
+
+      <main id="main" class="main" aria-live="polite">
+        <div id="loading" class="state state--loading">Cargando WORKFLOW.yaml…</div>
+        <div id="error" class="state state--error hidden"></div>
+        <div id="content" class="hidden"></div>
+      </main>
+
+      <footer class="footer">
+        <span id="meta-line">—</span>
+        <span>Fuente: <code>WORKFLOW.yaml</code></span>
+      </footer>
+    </div>
+
+    <template id="tpl-content">
+      <section class="hero card">
+        <div class="hero__top">
+          <div>
+            <p class="eyebrow">Proyecto</p>
+            <h2 class="project-name"></h2>
+            <p class="project-idea"></p>
+          </div>
+          <div class="phase-badge">
+            <span class="phase-badge__label">Fase actual</span>
+            <strong class="phase-badge__value"></strong>
+          </div>
+        </div>
+        <div class="phase-track" aria-label="Progreso de fases"></div>
+      </section>
+
+      <div class="grid-2">
+        <section class="card">
+          <div class="card__head">
+            <h3>Siguiente acción</h3>
+          </div>
+          <ul class="actions-list"></ul>
+        </section>
+
+        <section class="card">
+          <div class="card__head">
+            <h3>Delivery gate</h3>
+          </div>
+          <div class="delivery-gate"></div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="card__head">
+          <h3>Gates</h3>
+          <span class="card__hint">Estado de validación del flujo</span>
+        </div>
+        <div class="gates-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="card__head">
+          <h3>Pipeline MDD</h3>
+          <span class="pipeline-summary card__hint"></span>
+        </div>
+        <div class="agents-table-wrap">
+          <table class="agents-table">
+            <thead>
+              <tr>
+                <th>Agente</th>
+                <th>Comando</th>
+                <th>Secciones</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody class="agents-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </template>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

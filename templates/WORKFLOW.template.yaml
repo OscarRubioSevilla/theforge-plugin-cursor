@@ -1,0 +1,239 @@
+# Estado del flujo SDD local (SSOT). El agente actualiza `phase`, `gates.*.status` y `pipeline.*`.
+version: 3
+
+project:
+  id: {{project.id}}
+  name: {{project.name}}
+  idea: |
+    {{project.idea}}
+
+phase: idea
+# Fases: idea → paso0 → spec → mdd → mdd_pipeline → gates → deliverables → done
+
+pipeline:
+  mode: {{pipeline.mode}}
+  current_agent: clarifier
+  delivery_gate:
+    score_threshold: 90
+    max_iterations: 2
+    last_score: null
+    blockers: []
+    fix_target: null
+  agents:
+    - id: clarifier
+      name: Clarificador
+      forge_node: clarifier
+      command: forge-clarifier
+      status: pending
+      output_artifact: docs/sdd/.pipeline/clarifier-output.md
+      parallel_group: null
+      sections: ["§1"]
+    - id: software_architect
+      name: Arquitecto de Software (monolítico)
+      forge_node: software_architect
+      command: forge-software-architect
+      status: pending
+      output_artifact: docs/sdd/.pipeline/architect-draft.md
+      parallel_group: null
+      sections: ["§2", "§3", "§4"]
+      note: "Rama LOW/MEDIUM; omitir si pipeline.mode = high_split"
+    - id: stack_architect
+      name: Arquitecto de Stack
+      forge_node: stack_architect
+      command: forge-stack-architect
+      status: pending
+      output_artifact: docs/sdd/.pipeline/stack-draft.md
+      parallel_group: null
+      sections: ["§2"]
+      note: "Rama HIGH; omitir si pipeline.mode = monolithic"
+    - id: data_model
+      name: Arquitecto de Modelo de Datos
+      forge_node: data_model
+      command: forge-data-model
+      status: pending
+      output_artifact: docs/sdd/.pipeline/data-model-draft.md
+      parallel_group: null
+      sections: ["§3"]
+    - id: architect_critic
+      name: Critic del Arquitecto
+      forge_node: architect_critic
+      command: forge-architect-critic
+      status: pending
+      output_artifact: docs/sdd/.pipeline/critic-feedback.json
+      parallel_group: null
+      sections: ["§3", "§4"]
+    - id: data_model_patch
+      name: Parche de Modelo de Datos
+      forge_node: data_model_patch
+      command: forge-data-model-patch
+      status: pending
+      output_artifact: docs/sdd/.pipeline/data-model-patch.md
+      parallel_group: null
+      sections: ["§3"]
+      note: "Solo si critic detecta gaps solo de tablas"
+    - id: api_contracts
+      name: Arquitecto de Contratos API
+      forge_node: api_contracts
+      command: forge-api-contracts
+      status: pending
+      output_artifact: docs/sdd/.pipeline/api-contracts-draft.md
+      parallel_group: null
+      sections: ["§4"]
+    - id: section5
+      name: Ingeniero §5 Lógica
+      forge_node: section5
+      command: forge-section5
+      status: pending
+      output_artifact: docs/sdd/.pipeline/section5-draft.md
+      parallel_group: null
+      sections: ["§5"]
+    - id: format_after_architect
+      name: Formateador post-arquitecto
+      forge_node: format_after_architect
+      command: forge-formatter
+      status: pending
+      output_artifact: docs/sdd/.pipeline/mdd-after-architect.md
+      parallel_group: null
+      sections: ["§2", "§3", "§4", "§5"]
+      note: "Normalización determinista; sin LLM"
+    - id: security_integration
+      name: Seguridad + Integración (paralelo)
+      forge_node: security_integration
+      command: forge-security-integration
+      status: pending
+      output_artifact: docs/sdd/.pipeline/sec-int-draft.md
+      parallel_group: sec_int
+      sections: ["§6", "§7"]
+      note: "Promise.all §6+§7 en Forge; primera pasada"
+    - id: security
+      name: Arquitecto de Seguridad
+      forge_node: security
+      command: forge-security
+      status: pending
+      output_artifact: docs/sdd/.pipeline/security-draft.md
+      parallel_group: null
+      sections: ["§6"]
+      note: "Regeneración individual (delivery gate loop)"
+    - id: integration
+      name: Ingeniero de Integración
+      forge_node: integration
+      command: forge-integration
+      status: pending
+      output_artifact: docs/sdd/.pipeline/integration-draft.md
+      parallel_group: null
+      sections: ["§7"]
+      note: "Regeneración individual (delivery gate loop)"
+    - id: format_after_redactor
+      name: Formateador post-§6/§7
+      forge_node: format_after_redactor
+      command: forge-formatter
+      status: pending
+      output_artifact: docs/sdd/.pipeline/mdd-after-redactor.md
+      parallel_group: null
+      sections: ["§6", "§7"]
+    - id: cross_consistency_checker
+      name: Revisor de Consistencia Cruzada
+      forge_node: cross_consistency_checker
+      command: forge-cross-consistency
+      status: pending
+      output_artifact: docs/sdd/.pipeline/cross-consistency-patches.json
+      parallel_group: post_format
+      sections: ["§2", "§3", "§4", "§6", "§7"]
+    - id: diagram_injector
+      name: Inyector de Diagramas
+      forge_node: diagram_injector
+      command: forge-diagram-injector
+      status: pending
+      output_artifact: docs/sdd/.pipeline/diagram-injector.md
+      parallel_group: post_format
+      sections: ["§3", "§7"]
+      note: "Code-only; sugerencias Mermaid"
+    - id: auditor
+      name: Auditor de Calidad
+      forge_node: auditor
+      command: forge-auditor
+      status: pending
+      output_artifact: docs/sdd/.pipeline/auditor-report.json
+      parallel_group: null
+      sections: ["§1", "§7"]
+    - id: prepare_output
+      name: Preparar salida y delivery gate
+      forge_node: prepare_output
+      command: forge-prepare-output
+      status: pending
+      output_artifact: docs/sdd/mdd.md
+      parallel_group: null
+      sections: ["§1", "§7"]
+      note: "Merge sidecars → mdd.md; evalúa delivery gate; puede re-enrutar"
+    - id: paso0_coverage_remediation
+      name: Remediación cobertura Paso 0
+      forge_node: paso0_coverage_remediation
+      command: forge-paso0-coverage-remediation
+      status: pending
+      output_artifact: deliverables/paso0-remediation-log.json
+      parallel_group: null
+      sections: ["§1", "§4", "§9"]
+      note: "Post-proceso automático tras prepare_output; loop validate→remediate hasta 0 blockers o max 3"
+
+gates:
+  paso0:
+    status: pending
+    checks:
+      - paso0/domain-benchmark.md existe y tiene D-IDs
+      - paso0/decisions.catalog.json válido (kind paso0_decision_catalog)
+  spec:
+    status: pending
+    checks:
+      - docs/sdd/spec.md sin [NEEDS CLARIFICATION] abiertos
+      - trazabilidad a decisionIds del catálogo
+  paso0_mdd_coverage:
+    status: pending
+    depends_on:
+      - paso0
+      - spec
+      - paso0_coverage_remediation
+    threshold:
+      mvp_decision_ids_in_mdd: 1.0
+      canonical_entities_in_section3: 1.0
+      mandatory_api_families_in_section4: 1.0
+      business_rules_in_section5: 1.0
+      section0_present: true
+      section9_present: true
+      section10_present: true
+    checks:
+      - npm run validate:paso0-coverage sin blockers
+      - deliverables/paso0-coverage-report.json passed=true
+      - deliverables/paso0-remediation-log.json passed=true
+      - §0 patrones inmutables presente cuando existe catálogo
+      - §10 Registro de cambios presente cuando existe catálogo
+  mdd:
+    status: pending
+    depends_on:
+      - paso0_mdd_coverage
+    checks:
+      - docs/sdd/mdd.md con §0 + 7 secciones canónicas + §8 + §9 + §10
+      - coherencia spec ↔ mdd (entidades, §4.A)
+      - profundidad delivery gate (pipeline completo o checklist skill)
+      - gate paso0_mdd_coverage en passed (cobertura 100 % MVP/confirmada)
+  delivery:
+    status: pending
+    checks:
+      - docs/sdd/tasks.md generado
+      - docs/sdd/blueprint.md derivado de MDD §2
+      - deliverables/sdd-bundle.md índice exportable
+      - deliverables/gate-report.md actualizado
+
+artifacts:
+  workflow: WORKFLOW.yaml
+  pipeline_dir: docs/sdd/.pipeline/
+  paso0:
+    benchmark: paso0/domain-benchmark.md
+    catalog: paso0/decisions.catalog.json
+    template: paso0/TEMPLATE.md
+  spec: docs/sdd/spec.md
+  mdd: docs/sdd/mdd.md
+  blueprint: docs/sdd/blueprint.md
+  tasks: docs/sdd/tasks.md
+  deliverables_dir: deliverables/
+
+references: {}

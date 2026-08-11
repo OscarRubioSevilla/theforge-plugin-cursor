@@ -1,0 +1,35 @@
+{
+  "name": "forge-sdd-cursor",
+  "version": "0.1.0",
+  "description": "Plugin Cursor Forge SDD: flujo local Paso 0 → Spec → MDD → gates sin API The Forge.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/OscarRubioSevilla/theforge-plugin-cursor.git"
+  },
+  "bin": {
+    "forge-sdd": "scripts/init-forge.mjs"
+  },
+  "files": [
+    ".cursor-plugin",
+    "commands",
+    "skills",
+    "rules",
+    "prompts",
+    "scripts",
+    "templates",
+    "ui",
+    "paso0",
+    "README.md"
+  ],
+  "scripts": {
+    "vendor-prompts": "node scripts/vendor-prompts.mjs",
+    "generate:commands": "node scripts/generate-forge-commands.mjs",
+    "build:plugin": "npm run vendor-prompts && npm run generate:commands",
+    "init-forge": "node scripts/init-forge.mjs",
+    "ui": "node scripts/serve-sdd-ui.mjs"
+  },
+  "dependencies": {
+    "yaml": "^2.8.1"
+  }
+}

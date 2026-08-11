@@ -1,0 +1,12 @@
+{
+  "name": "forge-sdd",
+  "displayName": "Forge SDD",
+  "description": "Flujo SDD local: Paso 0 → Spec → MDD multi-agente → gates. Sin API The Forge.",
+  "version": "0.1.0",
+  "author": { "name": "The Forge" },
+  "license": "Apache-2.0",
+  "keywords": ["sdd", "mdd", "spec", "paso0", "theforge"],
+  "commands": "commands",
+  "skills": "skills",
+  "rules": "rules"
+}
