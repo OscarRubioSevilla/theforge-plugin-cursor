@@ -1,19 +1,16 @@
 #!/usr/bin/env node
 /**
- * Genera comandos forge-* para plugin (commands/), workspace portable y monorepo.
+ * Genera comandos forge-* en el repo del plugin (commands/).
  * Ejecutar: npm run build:plugin  (vendor-prompts + este script)
  */
 import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolvePluginRoot } from "./forge-plugin-path.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const workspaceRoot = join(__dirname, "..");
-const monorepoRoot = join(workspaceRoot, "../..");
-const PLUGIN_COMMANDS = join(workspaceRoot, "commands");
-const WORKSPACE_COMMANDS = join(workspaceRoot, ".cursor/commands");
-const MONOREPO_COMMANDS = join(monorepoRoot, ".cursor/commands");
 const PROMPTS_PREFIX = "prompts/mdd";
+const PLUGIN_COMMANDS = join(resolvePluginRoot(), "commands");
 
 /** @param {string} ref */
 function promptFile(ref) {
@@ -554,7 +551,7 @@ npx @theforge/cursor-sdd-workspace init-forge --no-cursor --target . --name "Mi 
 
 Siguiente: \`/forge-spec\`.
 `,
-  "forge-spec.md": readFileSync(join(WORKSPACE_COMMANDS, "forge-spec.md"), "utf8"),
+  "forge-spec.md": readFileSync(join(PLUGIN_COMMANDS, "forge-spec.md"), "utf8"),
   "forge-mdd.md": `# Forge MDD (local, monolítico)
 
 **No usar The Forge API.**
@@ -570,7 +567,7 @@ Completar \`docs/sdd/mdd.md\` — **7 secciones canónicas**, sin inventar domin
 
 **Siguiente:** \`/forge-gate\`.
 `,
-  "forge-gate.md": readFileSync(join(WORKSPACE_COMMANDS, "forge-gate.md"), "utf8")
+  "forge-gate.md": readFileSync(join(PLUGIN_COMMANDS, "forge-gate.md"), "utf8")
     .replace(
       "detalle en `../../.cursor/skills/forge-workflow/SKILL.md`",
       "detalle en la skill **forge-workflow** del plugin",
@@ -582,40 +579,25 @@ Completar \`docs/sdd/mdd.md\` — **7 secciones canónicas**, sin inventar domin
 };
 
 function main() {
-  mkdirSync(PLUGIN_COMMANDS, { recursive: true });
-  mkdirSync(WORKSPACE_COMMANDS, { recursive: true });
-  mkdirSync(MONOREPO_COMMANDS, { recursive: true });
-
-  const monoPrefix = "packages/cursor-sdd-workspace/";
+  const pluginRoot = resolvePluginRoot();
+  const pluginCommands = join(pluginRoot, "commands");
+  mkdirSync(pluginCommands, { recursive: true });
 
   for (const agent of agents) {
-    writeFileSync(join(PLUGIN_COMMANDS, `${agent.id}.md`), render(agent, null));
-    writeFileSync(join(WORKSPACE_COMMANDS, `${agent.id}.md`), render(agent, null));
-    writeFileSync(join(MONOREPO_COMMANDS, `${agent.id}.md`), render(agent, monoPrefix));
+    writeFileSync(join(pluginCommands, `${agent.id}.md`), render(agent, null));
   }
 
-  const pipelinePlugin = renderPipeline(null);
-  const pipelineMono = renderPipeline(monoPrefix);
-  writeFileSync(join(PLUGIN_COMMANDS, "forge-mdd-pipeline.md"), pipelinePlugin);
-  writeFileSync(join(WORKSPACE_COMMANDS, "forge-mdd-pipeline.md"), pipelinePlugin);
-  writeFileSync(join(MONOREPO_COMMANDS, "forge-mdd-pipeline.md"), pipelineMono);
+  writeFileSync(
+    join(pluginCommands, "forge-mdd-pipeline.md"),
+    renderPipeline(null),
+  );
 
   for (const [name, content] of Object.entries(STATIC_PLUGIN)) {
-    writeFileSync(join(PLUGIN_COMMANDS, name), content);
-    writeFileSync(join(WORKSPACE_COMMANDS, name), content);
-    if (name === "init-forge.md") continue;
-    const monoContent =
-      name === "forge-mdd.md"
-        ? content.replace(
-            "`prompts/mdd/mdd-constitution-skeleton.md`",
-            "`packages/cursor-sdd-workspace/prompts/mdd/mdd-constitution-skeleton.md`",
-          )
-        : content.replace(/\`(WORKFLOW|paso0|docs\/sdd|deliverables)/g, "`packages/cursor-sdd-workspace/$1");
-    writeFileSync(join(MONOREPO_COMMANDS, name), monoContent);
+    writeFileSync(join(pluginCommands, name), content);
   }
 
   console.log(
-    `Generated ${agents.length} agent commands × 3 targets + ${Object.keys(STATIC_PLUGIN).length} static commands`,
+    `Generated ${agents.length} agent commands + ${Object.keys(STATIC_PLUGIN).length} static → ${pluginCommands}`,
   );
 }
 

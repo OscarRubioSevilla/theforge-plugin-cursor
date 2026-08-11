@@ -1,20 +1,16 @@
 #!/usr/bin/env node
 /**
- * Sincroniza prompts MDD desde apps/api hacia prompts/mdd/ del plugin.
- * Ejecutar desde packages/cursor-sdd-workspace: node scripts/vendor-prompts.mjs
+ * Sincroniza prompts MDD desde apps/api hacia el repo del plugin Cursor.
+ * Uso (monorepo): cd packages/cursor-sdd-workspace && npm run sync:plugin
  */
 import { cpSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import {
+  resolvePluginRoot,
+  resolvePromptsSourceDir,
+} from "./forge-plugin-path.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PACKAGE_ROOT = join(__dirname, "..");
-const MONOREPO_ROOT = join(PACKAGE_ROOT, "../..");
-const SOURCE_DIR = join(
-  MONOREPO_ROOT,
-  "apps/api/src/modules/ai-analysis/prompts/mdd",
-);
-const DEST_DIR = join(PACKAGE_ROOT, "prompts/mdd");
+const DEST_DIR = join(resolvePluginRoot(), "prompts/mdd");
 
 function copyMdRecursive(src, dest) {
   mkdirSync(dest, { recursive: true });
@@ -33,14 +29,20 @@ function copyMdRecursive(src, dest) {
 }
 
 function main() {
-  if (!existsSync(SOURCE_DIR)) {
-    console.error(`Error: no existe el directorio fuente: ${SOURCE_DIR}`);
-    console.error("Ejecuta este script desde el monorepo The Forge.");
+  const sourceDir = resolvePromptsSourceDir();
+  if (!existsSync(sourceDir)) {
+    console.error(`Error: no existe el directorio fuente: ${sourceDir}`);
+    console.error(
+      "Ejecuta desde el monorepo The Forge o define FORGE_PROMPTS_SOURCE.",
+    );
     process.exit(1);
   }
 
-  const count = copyMdRecursive(SOURCE_DIR, DEST_DIR);
-  console.log(`✓ ${count} archivos .md copiados a prompts/mdd/`);
+  const pluginRoot = resolvePluginRoot();
+  const count = copyMdRecursive(sourceDir, DEST_DIR);
+  console.log(
+    `✓ ${count} archivos .md → ${join(pluginRoot, "prompts/mdd/")}`,
+  );
 }
 
 main();
