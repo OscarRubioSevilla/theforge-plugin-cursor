@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Delivery gate local — profundidad y calidad del MDD (paridad con mdd-delivery-gate.util.ts).
+ * Delivery gate local — profundidad enterprise MDD (siempre activa).
+ * Paridad con mdd-delivery-gate.util.ts + mdd-content-quality.util.ts.
  * Salida: deliverables/mdd-depth-report.json (+ resumen en stdout)
  * Exit 1 si score < 90 o hay blockers.
  */
@@ -9,6 +10,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   extractSection,
+  hasCreateTable,
+  hasBusinessRule,
   listCatalogDecisionIds,
   loadCatalog,
   loadMdd,
@@ -20,6 +23,9 @@ const DELIVERY_SCORE_THRESHOLD = 90;
 const MIN_SECTION_BODY = 200;
 const MIN_SECTION3_BODY = 100;
 const BLOCKER_PENALTY = 8;
+const CONTRATOS_SCHEMA_RATIO_MIN = 0.6;
+const CONTRATOS_SCHEMA_RATIO_MIN_ENDPOINTS = 5;
+const MUTATION_JSON_RATIO_MIN = 0.6;
 
 const CANONICAL_SECTIONS = [
   { num: 1, title: "1. Contexto", pattern: /^##\s+1\.\s*Contexto\b/im },
@@ -60,7 +66,7 @@ function parseArgs(argv) {
           "Uso: node scripts/validate-mdd-depth.mjs [--root PATH] [--mdd PATH] [--catalog PATH]",
           "     [--report PATH] [--json-only]",
           "",
-          "Valida profundidad §1–§7, endpoints §4, §5 BDD, manifest §7 y D-IDs extranjeros.",
+          "Valida profundidad enterprise §1–§7 (JSON por mutación, TechnicalMetadata, erDiagram, Gherkin por BR).",
           `Umbral: score >= ${DELIVERY_SCORE_THRESHOLD}, sin blockers.`,
         ].join("\n"),
       );
@@ -148,14 +154,83 @@ function countContratosEndpointRows(section4) {
   return Math.max(tableRows?.length ?? 0, headingRows?.length ?? 0);
 }
 
+/** Enterprise: tabla resumen Y al menos un bloque ```json. */
 function isContratosSubstantial(section4) {
   const body = section4 ?? "";
   if (body.length < 80) return false;
   if (/Falta:\s*definir endpoints/i.test(body)) return false;
-  const hasRoute = /\/[a-z0-9_{}-]+/i.test(body);
   const hasJson = /```json/i.test(body);
   const hasTable = /^\| (GET|POST|PATCH|DELETE|PUT) \|/m.test(body);
-  return hasRoute && (hasJson || hasTable);
+  return hasTable && hasJson;
+}
+
+function extractEndpointHeadings(contratosBody) {
+  return [...(contratosBody ?? "").matchAll(/^###\s+(GET|POST|PUT|DELETE|PATCH)\s+(\S+)/gim)].map(
+    (m) => ({ method: m[1].toUpperCase(), path: m[2] }),
+  );
+}
+
+function computeContratosSchemaRatio(contratosBody) {
+  const body = contratosBody ?? "";
+  const headings = extractEndpointHeadings(body);
+  if (headings.length === 0) return { totalEndpoints: 0, endpointsWithSchema: 0, ratio: 1 };
+
+  const blocks = body
+    .split(/\n(?=###\s+(?:GET|POST|PUT|DELETE|PATCH)\s+)/i)
+    .filter((b) => /^###\s+/.test(b.trim()));
+  const withSchema = blocks.filter((b) => /```json/i.test(b)).length;
+  const endpointsWithSchema =
+    blocks.length >= headings.length ? withSchema : Math.min(withSchema, headings.length);
+  return {
+    totalEndpoints: headings.length,
+    endpointsWithSchema,
+    ratio: headings.length > 0 ? endpointsWithSchema / headings.length : 1,
+  };
+}
+
+/** Ratio de mutaciones (POST/PATCH/DELETE/PUT) con ### + JSON documentado. */
+function computeMutationJsonRatio(section4) {
+  const body = section4 ?? "";
+  const mutationMethods = new Set(["POST", "PATCH", "DELETE", "PUT"]);
+
+  const tableMutations = [...(body.matchAll(/^\|\s*(POST|PATCH|DELETE|PUT)\s*\|/gim))].map((m) =>
+    m[1].toUpperCase(),
+  );
+  const mutationHeadings = extractEndpointHeadings(body).filter((h) =>
+    mutationMethods.has(h.method),
+  );
+
+  const mutationBlocks = body
+    .split(/\n(?=###\s+(?:POST|PATCH|DELETE|PUT)\s+)/i)
+    .filter((b) => /^###\s+(?:POST|PATCH|DELETE|PUT)/i.test(b.trim()));
+
+  const total = Math.max(tableMutations.length, mutationHeadings.length, mutationBlocks.length);
+  if (total === 0) return { total: 0, withJson: 0, ratio: 1 };
+
+  const withJson = mutationBlocks.filter((b) => /```json/i.test(b)).length;
+  const effectiveWithJson =
+    mutationBlocks.length >= total ? withJson : Math.min(withJson, mutationHeadings.length);
+
+  return {
+    total,
+    withJson: effectiveWithJson,
+    ratio: effectiveWithJson / total,
+  };
+}
+
+function hasTechnicalMetadata(section3) {
+  const body = section3 ?? "";
+  if (/```TechnicalMetadata/i.test(body)) return true;
+  if (/TechnicalMetadata/i.test(body) && /\[(?:high_security|pii|audit|retention)/i.test(body)) {
+    return true;
+  }
+  return false;
+}
+
+function hasErDiagram(section3) {
+  const body = section3 ?? "";
+  const mermaidBlocks = body.match(/```mermaid[\s\S]*?```/gi) ?? [];
+  return mermaidBlocks.some((block) => /erDiagram/i.test(block));
 }
 
 function minEndpointRows(decisionCount) {
@@ -182,8 +257,15 @@ function countGherkinBlocks(section5) {
   return Math.max(fences, features);
 }
 
-function countBusinessRules(section5) {
-  return new Set((section5 ?? "").match(/\bRN-\d{2,3}\b/g) ?? []).size;
+function minGherkinRequired(businessRuleCount) {
+  if (businessRuleCount <= 0) return 2;
+  if (businessRuleCount <= 4) return businessRuleCount * 2;
+  return Math.min(businessRuleCount, 8);
+}
+
+function minSubsectionsRequired(businessRuleCount) {
+  if (businessRuleCount <= 0) return 4;
+  return Math.min(4, businessRuleCount);
 }
 
 function hasInfraManifest(section7) {
@@ -204,11 +286,39 @@ function extractMddDecisionIds(markdown) {
   return [...new Set((markdown ?? "").match(/\bD-\d+\b/g) ?? [])].sort();
 }
 
+/** Infiere agente de reparación según blockers enterprise. */
+export function inferFixTargetFromBlockers(blockers) {
+  const text = blockers.join("\n").toLowerCase();
+  if (/§4|contratos|endpoint|json|mutaci/i.test(text)) return "api_contracts";
+  if (/§3|technicalmetadata|erdiagram|create table|modelo de datos/i.test(text)) return "data_model";
+  if (/§5|gherkin|regla de negocio|rn-|br-/i.test(text)) return "section5";
+  if (/§7|manifest|infraestructura/i.test(text)) return "integration";
+  if (/§6|seguridad/i.test(text)) return "security";
+  return null;
+}
+
 function evaluateMddDepth({ mdd, catalog }) {
   const trimmed = (mdd ?? "").trim();
   const blockers = [];
   const warnings = [];
   let score = 100;
+
+  const enterprise = {
+    depth: "enterprise",
+    contratos_substantial: false,
+    contratos_schema_ratio: null,
+    mutation_json_ratio: null,
+    section3_technical_metadata: false,
+    section3_er_diagram: false,
+    section3_canonical_entities: { total: 0, present: 0, missing: [] },
+    section5_gherkin_required: 2,
+    section5_gherkin_actual: 0,
+    section5_subsections_required: 4,
+    section5_business_rules: { total: 0, present: 0, missing: [] },
+    total_lines: 0,
+    min_lines_warn: 800,
+    min_lines_blocker: null,
+  };
 
   const structure = validateMddStructure(trimmed);
   if (structure.missingSections.length > 0) {
@@ -236,45 +346,143 @@ function evaluateMddDepth({ mdd, catalog }) {
 
     if (entry.num === 4 && !isContratosSubstantial(body)) {
       blockers.push(
-        "§4 Contratos de API no tiene endpoints reales con request/response JSON (placeholder o solo stubs).",
+        "§4 Contratos de API requiere tabla resumen Y bloques JSON request/response (enterprise). Placeholder o solo stubs.",
       );
     }
   }
 
   const decisionCount = (catalog?.decisions ?? []).length;
+  const businessRules = catalog?.businessRules ?? [];
+  const businessRuleCount = businessRules.length;
+  const canonicalEntities = catalog?.canonicalEntities ?? [];
+
+  const section3 = extractSectionBody(trimmed, 3) ?? extractSection(trimmed, 3);
   const section4 = extractSectionBody(trimmed, 4) ?? extractSection(trimmed, 4);
+  const section5 = extractSectionBody(trimmed, 5) ?? extractSection(trimmed, 5);
+  const section7 = extractSectionBody(trimmed, 7) ?? extractSection(trimmed, 7);
+
+  enterprise.contratos_substantial = isContratosSubstantial(section4);
+
+  // §4 — endpoints count + schema ratio + mutation ratio
   const endpointRows = countContratosEndpointRows(section4);
   const minEndpoints = minEndpointRows(decisionCount);
-  if (isContratosSubstantial(section4) && endpointRows < minEndpoints) {
+  if (enterprise.contratos_substantial && endpointRows < minEndpoints) {
     blockers.push(
       `§4: ${endpointRows} filas/endpoints documentados; mínimo ${minEndpoints} para catálogo con ${decisionCount} decisiones.`,
     );
   }
 
-  const section5 = extractSectionBody(trimmed, 5) ?? extractSection(trimmed, 5);
+  const schemaRatio = computeContratosSchemaRatio(section4);
+  enterprise.contratos_schema_ratio = schemaRatio.ratio;
+  if (
+    schemaRatio.totalEndpoints >= CONTRATOS_SCHEMA_RATIO_MIN_ENDPOINTS &&
+    schemaRatio.ratio < CONTRATOS_SCHEMA_RATIO_MIN
+  ) {
+    const pct = Math.round(schemaRatio.ratio * 100);
+    blockers.push(
+      `§4 Contratos de API: solo ${schemaRatio.endpointsWithSchema}/${schemaRatio.totalEndpoints} endpoints (${pct}%) traen request/response JSON; mínimo ${Math.round(CONTRATOS_SCHEMA_RATIO_MIN * 100)}%.`,
+    );
+  }
+
+  const mutationRatio = computeMutationJsonRatio(section4);
+  enterprise.mutation_json_ratio = mutationRatio.ratio;
+  if (mutationRatio.total >= 3 && mutationRatio.ratio < MUTATION_JSON_RATIO_MIN) {
+    const pct = Math.round(mutationRatio.ratio * 100);
+    blockers.push(
+      `§4 mutaciones (POST/PATCH/DELETE/PUT): solo ${mutationRatio.withJson}/${mutationRatio.total} (${pct}%) con ### METHOD /path + JSON; mínimo ${Math.round(MUTATION_JSON_RATIO_MIN * 100)}%.`,
+    );
+  }
+
+  // §3 — TechnicalMetadata, erDiagram, CREATE TABLE por entidad canónica
+  enterprise.section3_technical_metadata = hasTechnicalMetadata(section3);
+  if (!enterprise.section3_technical_metadata) {
+    blockers.push(
+      "§3: falta bloque TechnicalMetadata (fence ```TechnicalMetadata o sección por tabla con etiquetas [high_security], [pii], etc.).",
+    );
+  }
+
+  enterprise.section3_er_diagram = hasErDiagram(section3);
+  if (!enterprise.section3_er_diagram) {
+    blockers.push("§3: falta diagrama ```mermaid con erDiagram alineado a CREATE TABLE.");
+  }
+
+  enterprise.section3_canonical_entities.total = canonicalEntities.length;
+  const missingEntities = [];
+  for (const entity of canonicalEntities) {
+    const name = typeof entity === "string" ? entity : entity?.name ?? entity?.table ?? "";
+    if (!name) continue;
+    if (hasCreateTable(section3, name)) {
+      enterprise.section3_canonical_entities.present += 1;
+    } else {
+      missingEntities.push(name);
+    }
+  }
+  enterprise.section3_canonical_entities.missing = missingEntities;
+  if (missingEntities.length > 0) {
+    blockers.push(
+      `§3: faltan CREATE TABLE para entidades canónicas (${missingEntities.length}/${canonicalEntities.length}): ${missingEntities.slice(0, 8).join(", ")}${missingEntities.length > 8 ? "…" : ""}.`,
+    );
+  }
+
+  // §5 — Gherkin, subsecciones, businessRules
   const subsections = countSubsections(section5);
   const bullets = countSubstantiveBullets(section5);
   const gherkin = countGherkinBlocks(section5);
-  const rnCount = countBusinessRules(section5);
+  const minGherkin = minGherkinRequired(businessRuleCount);
+  const minSubsections = minSubsectionsRequired(businessRuleCount);
 
-  if (subsections < 4 && bullets < 8) {
+  enterprise.section5_gherkin_required = minGherkin;
+  enterprise.section5_gherkin_actual = gherkin;
+  enterprise.section5_subsections_required = minSubsections;
+
+  if (subsections < minSubsections && bullets < 8) {
     blockers.push(
-      `§5: insuficiente profundidad (${subsections} subsecciones ###, ${bullets} viñetas; mínimo 4 ### o 8 viñetas).`,
+      `§5: insuficiente profundidad (${subsections} subsecciones ###, mínimo ${minSubsections}; ${bullets} viñetas).`,
     );
   }
-  if (gherkin < 2) {
-    blockers.push(`§5: faltan escenarios Gherkin (${gherkin}/2 mínimo).`);
-  }
-  if ((catalog?.businessRules ?? []).length > 0 && rnCount < Math.min(4, catalog.businessRules.length)) {
-    warnings.push(
-      `§5: solo ${rnCount} reglas RN-XX detectadas; catálogo declara ${catalog.businessRules.length} businessRules.`,
-    );
-    score -= 5;
+  if (gherkin < minGherkin) {
+    blockers.push(`§5: faltan escenarios Gherkin (${gherkin}/${minGherkin} mínimo enterprise).`);
   }
 
-  const section7 = extractSectionBody(trimmed, 7) ?? extractSection(trimmed, 7);
+  enterprise.section5_business_rules.total = businessRuleCount;
+  const missingRules = [];
+  for (const rule of businessRules) {
+    const ruleId = rule?.id ?? rule;
+    if (!ruleId) continue;
+    if (hasBusinessRule(section5, ruleId)) {
+      enterprise.section5_business_rules.present += 1;
+    } else {
+      missingRules.push(ruleId);
+    }
+  }
+  enterprise.section5_business_rules.missing = missingRules;
+  if (missingRules.length > 0) {
+    blockers.push(
+      `§5: faltan reglas de negocio del catálogo (${missingRules.length}/${businessRuleCount}): ${missingRules.slice(0, 10).join(", ")}${missingRules.length > 10 ? "…" : ""}.`,
+    );
+  }
+
   if (!hasInfraManifest(section7)) {
     blockers.push("§7: falta bloque JSON manifest (stack, deployment, security o integration_metadata).");
+  }
+
+  // Líneas totales — WARN escalado; blocker en catálogos grandes
+  const totalLines = trimmed.split("\n").length;
+  const minLinesWarn = Math.max(800, decisionCount * 15);
+  enterprise.total_lines = totalLines;
+  enterprise.min_lines_warn = minLinesWarn;
+  if (decisionCount >= 40) {
+    enterprise.min_lines_blocker = 1200;
+    if (totalLines < 1200) {
+      blockers.push(
+        `MDD demasiado corto para catálogo enterprise (${totalLines} líneas; mínimo 1200 con ${decisionCount} decisiones).`,
+      );
+    }
+  } else if (totalLines < minLinesWarn) {
+    warnings.push(
+      `MDD por debajo del objetivo enterprise (${totalLines} líneas; objetivo ≥ ${minLinesWarn} para ${decisionCount} decisiones).`,
+    );
+    score -= 3;
   }
 
   const catalogIds = new Set(listCatalogDecisionIds(catalog));
@@ -290,6 +498,7 @@ function evaluateMddDepth({ mdd, catalog }) {
   score = Math.max(0, Math.min(100, score));
 
   const ok = score >= DELIVERY_SCORE_THRESHOLD && blockers.length === 0;
+  const fix_target = ok ? null : inferFixTargetFromBlockers(blockers);
 
   return {
     ok,
@@ -297,6 +506,8 @@ function evaluateMddDepth({ mdd, catalog }) {
     threshold: DELIVERY_SCORE_THRESHOLD,
     blockers,
     warnings,
+    fix_target,
+    enterprise,
     stats: {
       decision_count: decisionCount,
       section_lengths: Object.fromEntries(
@@ -307,10 +518,13 @@ function evaluateMddDepth({ mdd, catalog }) {
       section5_subsections: subsections,
       section5_bullets: bullets,
       section5_gherkin_blocks: gherkin,
-      section5_rn_count: rnCount,
+      section5_gherkin_min: minGherkin,
+      section5_business_rules_present: enterprise.section5_business_rules.present,
+      section5_business_rules_total: businessRuleCount,
       mdd_d_ids: mddIds.length,
       catalog_d_ids: catalogIds.size,
       foreign_d_ids: foreignIds,
+      total_lines: totalLines,
     },
   };
 }
@@ -327,6 +541,7 @@ const mdd = loadMdd(opts.mdd);
 const report = {
   passed: false,
   generatedAt: new Date().toISOString(),
+  depth: "enterprise",
   sources: { mdd: opts.mdd, catalog: opts.catalog },
   ...evaluateMddDepth({ mdd, catalog }),
 };
@@ -338,13 +553,19 @@ writeFileSync(opts.report, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 if (!opts.jsonOnly) {
   console.log(
     [
-      `MDD depth gate: ${report.ok ? "PASSED" : "FAILED"} (score ${report.score}/${DELIVERY_SCORE_THRESHOLD})`,
+      `MDD depth gate (enterprise): ${report.ok ? "PASSED" : "FAILED"} (score ${report.score}/${DELIVERY_SCORE_THRESHOLD})`,
       `  Endpoints §4: ${report.stats.endpoint_rows} (mín ${report.stats.min_endpoint_rows})`,
-      `  §5: ${report.stats.section5_subsections} ###, ${report.stats.section5_gherkin_blocks} gherkin, ${report.stats.section5_rn_count} RN-xx`,
+      `  Schema ratio: ${report.enterprise.contratos_schema_ratio != null ? Math.round(report.enterprise.contratos_schema_ratio * 100) : "—"}% | Mutaciones JSON: ${report.enterprise.mutation_json_ratio != null ? Math.round(report.enterprise.mutation_json_ratio * 100) : "—"}%`,
+      `  §3: TechnicalMetadata=${report.enterprise.section3_technical_metadata} erDiagram=${report.enterprise.section3_er_diagram} entities=${report.enterprise.section3_canonical_entities.present}/${report.enterprise.section3_canonical_entities.total}`,
+      `  §5: ${report.stats.section5_subsections} ###, ${report.stats.section5_gherkin_blocks}/${report.stats.section5_gherkin_min} gherkin, BR ${report.stats.section5_business_rules_present}/${report.stats.section5_business_rules_total}`,
+      `  Líneas: ${report.stats.total_lines} (warn ≥ ${report.enterprise.min_lines_warn}${report.enterprise.min_lines_blocker ? `, blocker ≥ ${report.enterprise.min_lines_blocker}` : ""})`,
       `  D-IDs MDD: ${report.stats.mdd_d_ids} (catálogo: ${report.stats.catalog_d_ids}, extranjeros: ${report.stats.foreign_d_ids.length})`,
+      report.fix_target ? `  fix_target sugerido: ${report.fix_target}` : "",
       `  Blockers: ${report.blockers.length}`,
       `  Informe: ${opts.report}`,
-    ].join("\n"),
+    ]
+      .filter(Boolean)
+      .join("\n"),
   );
   if (report.blockers.length > 0) {
     console.log("\nBlockers:");

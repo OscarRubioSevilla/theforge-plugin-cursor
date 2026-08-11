@@ -1,6 +1,6 @@
 # Forge Arquitecto de Software (monolítico) (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 > **Omitir cuando:** pipeline.mode = high_split
 
@@ -23,15 +23,16 @@ Nodo Forge: `software_architect`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+**Leer prompt completo** en `prompts/mdd/software-architect-prompt.md` **y** `prompts/mdd/software-architect-prompt-full.md` (no resumir ni omitir secciones enterprise).
 
-`prompts/mdd/software-architect-prompt-full.md`
+Ruta(s): `prompts/mdd/software-architect-prompt-full.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
+- Profundidad **enterprise siempre** (no tier opcional)
 - §2: stack con «¿Por qué?», Screaming Architecture
-- §3: CREATE TABLE + TechnicalMetadata + erDiagram en paridad
-- §4.A: tabla de endpoints + JSON request/response por operación
+- §3: CREATE TABLE + TechnicalMetadata + erDiagram Mermaid en §3
+- §4.A: tabla + ### METHOD /path + JSON request/response + 4xx por mutación
 - §4.B solo si Paso 0 nombra integraciones externas
 - YAGNI: sin entidades/API no citadas en Paso 0 o clarifiedScope
 

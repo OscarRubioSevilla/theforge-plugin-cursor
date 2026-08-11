@@ -1,6 +1,6 @@
 # Forge Arquitecto de Stack (§2) (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 > **Omitir cuando:** pipeline.mode = monolithic
 
@@ -21,11 +21,11 @@ Nodo Forge: `stack_architect`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/software-architect-prompt-stack.md`
 
-`prompts/mdd/software-architect-prompt-stack.md`
+Ruta(s): `prompts/mdd/software-architect-prompt-stack.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Solo cuerpo de §2 Arquitectura y Stack
 - Decisiones con justificación; coherencia con D-IDs del catálogo

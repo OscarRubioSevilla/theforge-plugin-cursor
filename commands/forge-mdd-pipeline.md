@@ -7,13 +7,14 @@ Ejecuta el pipeline multi-agente local con paridad al grafo MDD one-shot de The 
 ## Prerrequisitos
 
 1. `gates.spec.status: passed` en `WORKFLOW.yaml`
-2. Paso 0 sustancial para MDD profundo; demo YAGNI puede quedarse en ~250 líneas
+2. Paso 0 **deep** recomendado (40–80 D-IDs); profundidad MDD **enterprise siempre** (no tier standard)
 3. `phase: mdd` o `phase: mdd_pipeline`
 
 ## Configuración
 
 Editar `WORKFLOW.yaml`:
 
+- `mdd.depth: enterprise` (default del scaffold; no desactivar)
 - `pipeline.mode`: `monolithic` (LOW/MEDIUM) o `high_split` (HIGH)
 - Resetear agentes a `pending` (o `skipped` según rama)
 - `pipeline.current_agent: clarifier`

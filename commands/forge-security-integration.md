@@ -1,6 +1,6 @@
 # Forge Seguridad + Integración (paralelo) (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 **Paralelo:** `parallel_group: sec_int` — puede ejecutarse junto al otro agente del grupo.
 
@@ -20,11 +20,11 @@ Nodo Forge: `security_integration`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/security-architect-prompt.md + prompts/mdd/integration-engineer-prompt.md`
 
-`prompts/mdd/security-architect-prompt.md + prompts/mdd/integration-engineer-prompt.md`
+Ruta(s): `prompts/mdd/security-architect-prompt.md + prompts/mdd/integration-engineer-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - §6: controles acotados al alcance; schemaRequirements si faltan tablas
 - §7: 7.1–7.4+ manifest JSON (stack, deployment, security, integration_metadata)

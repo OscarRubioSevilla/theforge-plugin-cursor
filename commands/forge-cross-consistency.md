@@ -1,6 +1,6 @@
 # Forge Revisor de Consistencia Cruzada (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 **Paralelo:** `parallel_group: post_format` — puede ejecutarse junto al otro agente del grupo.
 
@@ -20,11 +20,11 @@ Nodo Forge: `cross_consistency_checker`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/cross-consistency-prompt.md`
 
-`prompts/mdd/cross-consistency-prompt.md`
+Ruta(s): `prompts/mdd/cross-consistency-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Parches mínimos (≤8): tablas §3 ↔ §4 ↔ manifest §7
 - Stack §2 ↔ base_image §7; api_prefix consistente

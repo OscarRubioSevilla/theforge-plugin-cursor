@@ -1,6 +1,6 @@
 # Forge Clarificador (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 ## Rol
 
@@ -22,11 +22,11 @@ Nodo Forge: `clarifier`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/clarifier-prompt.md`
 
-`prompts/mdd/clarifier-prompt.md`
+Ruta(s): `prompts/mdd/clarifier-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - §1 en español: propósito, fronteras DDD, actores, glosario (solo términos del alcance), UAT si aplica
 - Dueño de catálogo → §1: `mvpCapabilities`, `outOfScope`, `entities` (glosario), `risks` (R-xxx o mitigación)

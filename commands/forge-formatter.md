@@ -1,6 +1,6 @@
 # Forge Formateador determinista (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 ## Rol
 
@@ -18,11 +18,11 @@ Nodo Forge: `format_after_architect | format_after_redactor`. Paridad con grafo 
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/mdd-formatter-prompt.md`
 
-`prompts/mdd/mdd-formatter-prompt.md`
+Ruta(s): `prompts/mdd/mdd-formatter-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Sin LLM destructivo: solo normalización estructural
 - Promover fences SQL/JSON; corregir headings pegados

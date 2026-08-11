@@ -11,6 +11,9 @@ paso0:
   depth: deep  # deep | standard — ver paso0/DEEP-PASO0-GUIDE.md
   target_decision_count: 50  # ~20 en standard, 40-80 en deep
 
+mdd:
+  depth: enterprise  # siempre enterprise — gate bloqueante en validate:mdd-depth
+
 phase: idea
 # Fases: idea → paso0 → spec → mdd → mdd_pipeline → gates → deliverables → done
 

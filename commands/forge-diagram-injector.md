@@ -1,6 +1,6 @@
 # Forge Inyector de Diagramas (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 **Paralelo:** `parallel_group: post_format` — puede ejecutarse junto al otro agente del grupo.
 
@@ -22,11 +22,11 @@ Nodo Forge: `diagram_injector`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `(determinístico) skill forge-workflow — erDiagram §3 y flujos §7`
 
-`(determinístico) skill forge-workflow — erDiagram §3 y flujos §7`
+Ruta(s): `(determinístico) skill forge-workflow — erDiagram §3 y flujos §7`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Solo bloques Mermaid válidos
 - erDiagram en paridad con CREATE TABLE

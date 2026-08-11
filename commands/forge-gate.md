@@ -27,6 +27,7 @@ O usar `/forge-paso0-coverage-remediation` (paso 13 del pipeline MDD).
 - Escribe `deliverables/paso0-coverage-report.json` y `deliverables/mdd-depth-report.json`
 - **Exit code 1** si `blockers.length > 0` o score depth < 90 → gate `paso0_mdd_coverage` / `mdd` = **failed**
 - No marcar `gates.mdd.status: passed` sin `gates.paso0_mdd_coverage.status: passed` **y** `validate:mdd-depth` exit 0
+- Profundidad MDD **enterprise siempre** (`WORKFLOW.yaml` → `mdd.depth: enterprise`)
 
 ## Gates a evaluar
 
@@ -35,7 +36,7 @@ O usar `/forge-paso0-coverage-remediation` (paso 13 del pipeline MDD).
 | **paso0** | `paso0/domain-benchmark.md` + `paso0/decisions.catalog.json` válido; paridad D-IDs |
 | **spec** | Sin clarificaciones abiertas; RF con D-IDs; sin stack en spec |
 | **paso0_mdd_coverage** | `validate:paso0-coverage` sin blockers; umbrales en `WORKFLOW.yaml` |
-| **mdd** | 7 secciones + checklist profundidad + **`validate:mdd-depth` score ≥ 90**; **depende de paso0_mdd_coverage** |
+| **mdd** | 7 secciones + gate **enterprise** + **`validate:mdd-depth` score ≥ 90**; **depende de paso0_mdd_coverage** |
 | **delivery** | `tasks.md`, `blueprint.md`, bundle en `deliverables/` |
 
 ## Gate `paso0_mdd_coverage` (bloqueante)
@@ -56,14 +57,14 @@ Cobertura por sección (catálogo → MDD):
 |----------------|-------------------|
 | `canonicalEntities` | §3 CREATE TABLE cada una |
 | `mandatoryApiRouteFamilies` | §4.A cada `pathPattern` |
-| `businessRules` | §5 cada `RN-xx` |
+| `businessRules` | §5 cada `RN-xx` / `BR-xxx` |
 | `mvpCapabilities` | D-IDs en mdd |
 | `outOfScope` | D-IDs o texto en §1 |
 | `entities` | término en glosario §1 |
 | `risks` | `R-xxx` o mitigación |
 | D-ID MVP o «Decisión confirmada» | mdd.md (sección dedicada o §9) |
 
-## Checklist MDD (profundidad) — gate `mdd`
+## Checklist MDD enterprise — gate `mdd`
 
 Validar cada ítem (detalle en la skill **forge-workflow** del plugin):
 
@@ -76,20 +77,23 @@ Validar cada ítem (detalle en la skill **forge-workflow** del plugin):
 ### §3 Modelo de datos
 
 - [ ] Bloque `sql` coherente con glosario/catálogo.
-- [ ] Bloque `TechnicalMetadata`.
-- [ ] `mermaid erDiagram` en paridad con SQL.
+- [ ] Bloque `TechnicalMetadata` (**blocker** si falta).
+- [ ] `mermaid erDiagram` en §3 en paridad con SQL (**blocker** si falta).
+- [ ] CREATE TABLE por cada `canonicalEntities[]`.
 
 ### §4 Contratos
 
 - [ ] §4.A definida y **antes** de §4.B.
-- [ ] Tabla resumen + **request/response JSON por operación**.
+- [ ] Tabla resumen **y** bloques JSON request/response.
+- [ ] ≥60% endpoints con `### METHOD /path` + JSON (si ≥5 endpoints).
+- [ ] Mutaciones POST/PATCH/DELETE/PUT con JSON + códigos 4xx.
 - [ ] §4.B omitida o «No aplica» si no hay integraciones en Paso 0.
 
 ### §5 Lógica
 
-- [ ] **RN-XX** citando **BR-XXX** y **D-IDs**.
-- [ ] ≥4 subsecciones `###` sustantivas o ≥8 viñetas sustantivas.
-- [ ] ≥2 escenarios Gherkin.
+- [ ] **RN-xx / BR-xxx** citando **D-IDs** — cada regla del catálogo presente.
+- [ ] ≥ min(4, businessRules.length) subsecciones `###`.
+- [ ] Gherkin: min(BR, 8) bloques, o 2 por regla si BR ≤ 4.
 - [ ] Comportamiento/error documentado para cada mutación de §4.A.
 
 ### §6–§7
@@ -97,12 +101,14 @@ Validar cada ítem (detalle en la skill **forge-workflow** del plugin):
 - [ ] Seguridad acotada al alcance (sin auth OWASP si no hay login).
 - [ ] Manifest JSON con `stack`, `deployment`, `security`, `integration_metadata`.
 
-### Trazabilidad y D-IDs
+### Trazabilidad, volumen y D-IDs
 
 - [ ] Tabla RF ↔ D-IDs ↔ secciones MDD coherente con `docs/sdd/spec.md` §7.
 - [ ] `paso0-coverage-report.json` con `passed: true`.
-- [ ] `mdd-depth-report.json` con `ok: true` y score ≥ 90.
-- [ ] **Sin D-IDs extranjeros** al catálogo Paso 0 (p. ej. D-080/D-121 copiados de otro dominio).
+- [ ] `mdd-depth-report.json` con `ok: true`, score ≥ 90, sección `enterprise`.
+- [ ] **Sin D-IDs extranjeros** al catálogo Paso 0.
+- [ ] Blocker si ≥40 D-IDs en catálogo y MDD < 1200 líneas.
+- [ ] Si falla depth: usar `fix_target` del informe para re-enrutar agente (máx. 2 iteraciones).
 
 ## Gate delivery
 
@@ -113,7 +119,7 @@ Validar cada ítem (detalle en la skill **forge-workflow** del plugin):
 
 ## Salida
 
-1. Resultado de `npm run validate:paso0-coverage` y `npm run validate:mdd-depth` (blockers count, score).
+1. Resultado de `npm run validate:paso0-coverage` y `npm run validate:mdd-depth` (blockers count, score, `fix_target`).
 2. Informe breve por gate (passed / failed + hallazgos).
 3. Autofix triviales (typos D-ID, claves JSON, headings).
 4. Actualizar `WORKFLOW.yaml` y `phase` según resultado global.

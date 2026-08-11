@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Sincroniza prompts MDD desde apps/api hacia el repo del plugin Cursor.
- * Uso (monorepo): cd packages/cursor-sdd-workspace && npm run sync:plugin
+ * Uso: cd theforge-plugin-cursor && npm run vendor-prompts
+ * Fuente: FORGE_PROMPTS_SOURCE o ../theforge/apps/api/.../prompts/mdd
  */
 import { cpSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";

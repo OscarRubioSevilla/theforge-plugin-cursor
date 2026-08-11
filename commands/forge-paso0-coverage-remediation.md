@@ -1,6 +1,6 @@
 # Forge Remediación cobertura Paso 0 (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 ## Rol
 
@@ -20,11 +20,11 @@ Nodo Forge: `paso0_coverage_remediation`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `(determinístico) scripts/remediate-paso0-coverage.mjs`
 
-`(determinístico) scripts/remediate-paso0-coverage.mjs`
+Ruta(s): `(determinístico) scripts/remediate-paso0-coverage.mjs`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Ejecutar `npm run remediate:paso0-coverage` (loop validate→patch, max 3 iteraciones)
 - Parches deterministas: §0 patrones, términos §1.5, tabla R-xxx §1.7, D-IDs §1.8, rutas §4.A

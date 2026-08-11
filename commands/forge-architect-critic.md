@@ -1,6 +1,6 @@
 # Forge Critic del Arquitecto (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 ## Rol
 
@@ -17,11 +17,11 @@ Nodo Forge: `architect_critic`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/architect-critic-prompt.md`
 
-`prompts/mdd/architect-critic-prompt.md`
+Ruta(s): `prompts/mdd/architect-critic-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Verificar paridad directiva ↔ SQL ↔ ER ↔ §4
 - Detectar domain-auth-only-skew si BRD tiene ≥3 capacidades no-auth

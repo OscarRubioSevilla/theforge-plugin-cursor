@@ -1,6 +1,6 @@
 # Forge Arquitecto de Modelo de Datos (§3) (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 ## Rol
 
@@ -18,14 +18,15 @@ Nodo Forge: `data_model`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+**Leer prompt completo** en `prompts/mdd/software-architect-prompt.md` **y** `prompts/mdd/software-architect-prompt-data-model.md` (no resumir ni omitir secciones enterprise).
 
-`prompts/mdd/software-architect-prompt-data-model.md`
+Ruta(s): `prompts/mdd/software-architect-prompt-data-model.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
-- SQL CREATE TABLE válido; TechnicalMetadata por tabla
-- erDiagram Mermaid alineado (PK/FK sin comas inválidas)
+- TechnicalMetadata + erDiagram **obligatorios** en §3 (gate bloqueante)
+- SQL CREATE TABLE válido; TechnicalMetadata por tabla o bloque único
+- erDiagram Mermaid en §3 (PK/FK sin comas inválidas; no solo diagram-injector)
 - Dueño de `canonicalEntities[]` del catálogo → §3: **CREATE TABLE** por cada entidad
 - Todas las entidades del glosario §1 materializadas
 

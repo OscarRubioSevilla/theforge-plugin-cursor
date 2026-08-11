@@ -3,8 +3,25 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-export const DEMO_WORKSPACE_ROOT = join(__dirname, "..");
-export const MONOREPO_ROOT = join(DEMO_WORKSPACE_ROOT, "../..");
+export const PLUGIN_ROOT = join(__dirname, "..");
+
+/** @returns {string} Root of theforge monorepo (prompts source). */
+export function resolveMonorepoRoot() {
+  if (process.env.MONOREPO_ROOT || process.env.FORGE_MONOREPO_ROOT) {
+    return resolve(process.env.MONOREPO_ROOT ?? process.env.FORGE_MONOREPO_ROOT);
+  }
+  const sibling = join(PLUGIN_ROOT, "../theforge");
+  if (existsSync(join(sibling, "apps/api"))) {
+    return sibling;
+  }
+  const homeClone = join(process.env.HOME ?? "", "Documents/GitHub/theforge");
+  if (existsSync(join(homeClone, "apps/api"))) {
+    return homeClone;
+  }
+  return sibling;
+}
+
+export const MONOREPO_ROOT = resolveMonorepoRoot();
 
 /** @returns {string} Root of theforge-plugin-cursor (publish target). */
 export function resolvePluginRoot() {
@@ -22,7 +39,7 @@ export function resolvePluginRoot() {
   if (existsSync(join(homeClone, ".cursor-plugin", "plugin.json"))) {
     return homeClone;
   }
-  return DEMO_WORKSPACE_ROOT;
+  return PLUGIN_ROOT;
 }
 
 export function resolvePromptsSourceDir() {

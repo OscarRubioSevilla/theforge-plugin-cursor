@@ -1,6 +1,6 @@
 # Forge Auditor de Calidad MDD (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 ## Rol
 
@@ -18,11 +18,11 @@ Nodo Forge: `auditor`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/auditor-prompt.md`
 
-`prompts/mdd/auditor-prompt.md`
+Ruta(s): `prompts/mdd/auditor-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Umbral intervención < 85 → clarifier; ≥ 85 → done
 - Ejecutar `npm run validate:paso0-coverage` y penalizar score por cada D-ID MVP/confirmada ausente

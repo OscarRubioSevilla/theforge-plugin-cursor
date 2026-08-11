@@ -1,6 +1,6 @@
 # Forge Arquitecto de Contratos API (§4) (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 ## Rol
 
@@ -11,6 +11,7 @@ Nodo Forge: `api_contracts`. Paridad con grafo MDD one-shot.
 - docs/sdd/.pipeline/clarifier-output.md
 - docs/sdd/.pipeline/data-model-draft.md
 - docs/sdd/.pipeline/stack-draft.md (si high_split)
+- paso0/decisions.catalog.json
 
 ## Salidas
 
@@ -18,16 +19,17 @@ Nodo Forge: `api_contracts`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+**Leer prompt completo** en `prompts/mdd/software-architect-prompt.md` **y** `prompts/mdd/software-architect-prompt-api-contracts.md` (no resumir ni omitir secciones enterprise).
 
-`prompts/mdd/software-architect-prompt-api-contracts.md`
+Ruta(s): `prompts/mdd/software-architect-prompt-api-contracts.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
-- §4.A obligatoria: tabla resumen + JSON por endpoint
+- Checklist antes de `passed`: tabla §4.A **y** ≥1 bloque JSON; ratio ≥60% endpoints con JSON
+- Cada POST/PATCH/DELETE/PUT: subsección `### METHOD /path` + request/response JSON + 4xx
+- GET: fila resumen; detalle con response JSON cuando aplique
 - Dueño de `mandatoryApiRouteFamilies[]` → §4.A: cada `pathPattern` documentado
 - Tipos JSON alineados a columnas §3 (UUID, etc.)
-- Mín. ~150 chars §4; proyectos grandes: docenas de filas de endpoints
 
 ## Actualizar WORKFLOW.yaml
 

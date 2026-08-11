@@ -88,6 +88,39 @@ Guía para el agente: `paso0/DEEP-PASO0-GUIDE.md`. Modo rápido: `paso0.depth: s
 
 Un Paso 0 escaso (~18 D-IDs) suele generar un MDD de ~640 líneas; un Paso 0 deep (50+ D-IDs) alimenta un MDD de **1000+ líneas** tras el pipeline multi-agente.
 
+## Profundidad enterprise (siempre activa)
+
+El plugin **no ofrece tier standard para MDD**: cada ejecución del pipeline debe cumplir el delivery gate enterprise. En `WORKFLOW.yaml`:
+
+```yaml
+mdd:
+  depth: enterprise
+```
+
+### Qué exige el gate
+
+| Área | Requisito bloqueante |
+|------|---------------------|
+| §4 Contratos | Tabla resumen **y** JSON; ≥60% endpoints con `### METHOD /path` + JSON; mutaciones con 4xx |
+| §3 Datos | CREATE TABLE por `canonicalEntities[]`, TechnicalMetadata, erDiagram Mermaid en §3 |
+| §5 Lógica | Gherkin por `businessRules[]`; cada RN-xx/BR-xxx citado; min(BR,8) escenarios |
+| §7 Infra | Manifest JSON (stack, deployment, security) |
+| Trazabilidad | Sin D-IDs fuera del catálogo Paso 0 |
+| Volumen | Blocker si ≥40 D-IDs y MDD < 1200 líneas |
+
+```bash
+npm run validate:mdd-depth   # informe: deliverables/mdd-depth-report.json
+```
+
+El informe incluye `enterprise`, `fix_target` y score. Si falla, `/forge-prepare-output` re-enruta a `api_contracts`, `data_model` o `section5` (máx. 2 iteraciones).
+
+### Prompts y vendor-prompts
+
+Los archivos en `prompts/mdd/software-architect-prompt-api-contracts.md`, `…-data-model.md` y `section5-prompt.md` incluyen parches enterprise (comentario al inicio). **No ejecutar `vendor-prompts` sin re-aplicar esos parches** — flujo recomendado:
+
+1. `npm run vendor-prompts` (sync desde monorepo The Forge)
+2. Re-aplicar manualmente los overlays enterprise **o** mantener copias en `prompts/mdd/enterprise/*.md` y fusionar en commands
+
 ## Calidad MDD (delivery gate local)
 
 El plugin incluye validadores deterministas alineados con el delivery gate de The Forge:
@@ -132,6 +165,8 @@ npm run build:plugin
 ```
 
 (`vendor-prompts` lee `../theforge/apps/api/.../prompts/mdd/` cuando existe.)
+
+**Importante:** tras `vendor-prompts`, re-aplicar los parches enterprise en `prompts/mdd/software-architect-prompt-api-contracts.md`, `software-architect-prompt-data-model.md` y `section5-prompt.md` (buscar comentario `Enterprise overlay — re-apply after vendor-prompts`).
 
 ## Estructura
 

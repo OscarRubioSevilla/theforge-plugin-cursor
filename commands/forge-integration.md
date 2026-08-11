@@ -1,6 +1,6 @@
 # Forge Ingeniero de Integración (§7) (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 > **Opcional:** solo si el critic o delivery gate lo exige.
 
@@ -20,11 +20,11 @@ Nodo Forge: `integration`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/integration-engineer-prompt.md`
 
-`prompts/mdd/integration-engineer-prompt.md`
+Ruta(s): `prompts/mdd/integration-engineer-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Flujos paso a paso si el usuario los describió en Paso 0
 - Manifest JSON final coherente con §2 (Node version, DB engine)

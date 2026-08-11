@@ -12,6 +12,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_PREFIX = "prompts/mdd";
 const PLUGIN_COMMANDS = join(resolvePluginRoot(), "commands");
 
+/**
+ * Instrucción estándar para que el agente lea prompts completos del plugin.
+ * @param {string[]} files — nombres bajo prompts/mdd/ (sin prefijo)
+ */
+function readPromptInstruction(...files) {
+  const paths = files.map((f) => `\`${PROMPTS_PREFIX}/${f}\``).join(" **y** ");
+  return `**Leer prompt completo** en ${paths} (no resumir ni omitir secciones enterprise).`;
+}
+
 /** @param {string} ref */
 function promptFile(ref) {
   if (ref.startsWith("(") || ref.includes(".node.ts")) return ref;
@@ -76,9 +85,11 @@ const agents = [
     ],
     outputs: ["docs/sdd/.pipeline/architect-draft.md — §2, §3, §4"],
     obligations: [
+      readPromptInstruction("software-architect-prompt.md", "software-architect-prompt-full.md"),
+      "Profundidad **enterprise siempre** (no tier opcional)",
       "§2: stack con «¿Por qué?», Screaming Architecture",
-      "§3: CREATE TABLE + TechnicalMetadata + erDiagram en paridad",
-      "§4.A: tabla de endpoints + JSON request/response por operación",
+      "§3: CREATE TABLE + TechnicalMetadata + erDiagram Mermaid en §3",
+      "§4.A: tabla + ### METHOD /path + JSON request/response + 4xx por mutación",
       "§4.B solo si Paso 0 nombra integraciones externas",
       "YAGNI: sin entidades/API no citadas en Paso 0 o clarifiedScope",
     ],
@@ -118,8 +129,10 @@ const agents = [
     ],
     outputs: ["docs/sdd/.pipeline/data-model-draft.md — §3"],
     obligations: [
-      "SQL CREATE TABLE válido; TechnicalMetadata por tabla",
-      "erDiagram Mermaid alineado (PK/FK sin comas inválidas)",
+      readPromptInstruction("software-architect-prompt.md", "software-architect-prompt-data-model.md"),
+      "TechnicalMetadata + erDiagram **obligatorios** en §3 (gate bloqueante)",
+      "SQL CREATE TABLE válido; TechnicalMetadata por tabla o bloque único",
+      "erDiagram Mermaid en §3 (PK/FK sin comas inválidas; no solo diagram-injector)",
       "Dueño de `canonicalEntities[]` del catálogo → §3: **CREATE TABLE** por cada entidad",
       "Todas las entidades del glosario §1 materializadas",
     ],
@@ -174,13 +187,16 @@ const agents = [
       "docs/sdd/.pipeline/clarifier-output.md",
       "docs/sdd/.pipeline/data-model-draft.md",
       "docs/sdd/.pipeline/stack-draft.md (si high_split)",
+      "paso0/decisions.catalog.json",
     ],
     outputs: ["docs/sdd/.pipeline/api-contracts-draft.md — §4"],
     obligations: [
-      "§4.A obligatoria: tabla resumen + JSON por endpoint",
+      readPromptInstruction("software-architect-prompt.md", "software-architect-prompt-api-contracts.md"),
+      "Checklist antes de `passed`: tabla §4.A **y** ≥1 bloque JSON; ratio ≥60% endpoints con JSON",
+      "Cada POST/PATCH/DELETE/PUT: subsección `### METHOD /path` + request/response JSON + 4xx",
+      "GET: fila resumen; detalle con response JSON cuando aplique",
       "Dueño de `mandatoryApiRouteFamilies[]` → §4.A: cada `pathPattern` documentado",
       "Tipos JSON alineados a columnas §3 (UUID, etc.)",
-      "Mín. ~150 chars §4; proyectos grandes: docenas de filas de endpoints",
     ],
     next: "`/forge-section5`",
     agentId: "api_contracts",
@@ -192,15 +208,19 @@ const agents = [
     prompt: "section5-prompt.md",
     inputs: [
       "docs/sdd/.pipeline/clarifier-output.md",
-      "§1–§4 consolidados (drafts o mdd-after-architect)",
+      "docs/sdd/.pipeline/api-contracts-draft.md (**completo**, con JSON §4)",
+      "§1–§3 consolidados (drafts o mdd-after-architect)",
+      "paso0/decisions.catalog.json (`businessRules[]`)",
       "paso0/domain-benchmark.md",
     ],
     outputs: ["docs/sdd/.pipeline/section5-draft.md — §5"],
     obligations: [
-      "≥4 reglas BDD/AAA o ≥8 viñetas sustantivas",
-      "Dueño de `businessRules[]` → §5: cada **RN-xx** del catálogo con D-IDs",
-      "RN-XX → BR-XXX + D-IDs; ≥2 escenarios Gherkin",
-      "Cada mutación §4.A con comportamiento/error documentado",
+      readPromptInstruction("section5-prompt.md"),
+      "Gherkin: bloque ```gherkin por cada `businessRules[]` (mín. min(BR,8) o 2×BR si BR≤4)",
+      "Cada RN-xx/BR-xxx del catálogo citado en §5 con D-IDs",
+      "≥ min(4, businessRules.length) subsecciones ### sustantivas",
+      "Cada mutación §4.A con comportamiento/error documentado (4xx, reglas violadas)",
+      "Límite 12000 chars salvo catálogo >10 BR",
     ],
     next: "`/forge-formatter` (modo after_architect)",
     agentId: "section5",
@@ -348,10 +368,11 @@ const agents = [
       "Inyectar §0 **solo si** el catálogo declara `architecturePatterns[]`; si no, **no** añadir wizard de patrones",
       "Append §10 Registro de cambios tras §9",
       "Ejecutar `npm run validate:paso0-coverage`; **no** marcar `paso0_mdd_coverage` si hay blockers",
-      "Ejecutar `npm run validate:mdd-depth`; **no** marcar `gates.mdd` si score < 90 o hay blockers",
+      "Ejecutar `npm run validate:mdd-depth` (enterprise **siempre**); **no** marcar `gates.mdd` si score < 90 o hay blockers",
+      "Si falla depth: leer `fix_target` del informe (`api_contracts` | `data_model` | `section5` | `security` | `integration`)",
+      "Re-enrutar agente indicado (max **2** iteraciones documentadas en `pipeline.delivery_gate`)",
       "Asegurar §8 UI/UX y §9 Trazabilidad (plantilla: `paso0/mdd-sections-template.md`)",
-      "Evaluar delivery gate (umbral 90, MIN_SECTION_BODY 200 chars, §3 ≥100 si CREATE TABLE)",
-      "Si falla: marcar fix_target y re-enrutar agente (max 2 iteraciones)",
+      "Evaluar delivery gate enterprise: JSON mutaciones, TechnicalMetadata, erDiagram, Gherkin por BR",
       "Si ambos gates ok: marcar agente `passed`; **siguiente** `/forge-paso0-coverage-remediation`",
     ],
     next: "`/forge-paso0-coverage-remediation` o re-ejecutar agente indicado por fix_target",
@@ -415,12 +436,18 @@ function render(agent, rootPrefix) {
   const outputs = prefixPaths(agent.outputs, rootPrefix)
     .map((o) => `- ${o}`)
     .join("\n");
-  const obligations = agent.obligations.map((o) => `- ${o}`).join("\n");
+  const obligationsList = agent.obligations
+    .filter((o) => !o.startsWith("**Leer prompt completo**"))
+    .map((o) => `- ${o}`)
+    .join("\n");
   const promptPath = promptDisplay(agent.prompt, rootPrefix);
+  const readFull =
+    agent.obligations.find((o) => o.startsWith("**Leer prompt completo**")) ??
+    `Leer prompt empaquetado: \`${promptPath}\``;
 
   return `# Forge ${agent.title} (pipeline MDD local)
 
-**No usar The Forge API.**${opt}${skip}${parallel}
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.${opt}${skip}${parallel}
 
 ## Rol
 
@@ -436,13 +463,13 @@ ${outputs}
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+${readFull}
 
-\`${promptPath}\`
+Ruta(s): \`${promptPath}\`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
-${obligations}
+${obligationsList}
 
 ## Actualizar WORKFLOW.yaml
 
@@ -470,13 +497,14 @@ Ejecuta el pipeline multi-agente local con paridad al grafo MDD one-shot de The 
 ## Prerrequisitos
 
 1. \`gates.spec.status: passed\` en \`${p}WORKFLOW.yaml\`
-2. Paso 0 sustancial para MDD profundo; demo YAGNI puede quedarse en ~250 líneas
+2. Paso 0 **deep** recomendado (40–80 D-IDs); profundidad MDD **enterprise siempre** (no tier standard)
 3. \`phase: mdd\` o \`phase: mdd_pipeline\`
 
 ## Configuración
 
 Editar \`${p}WORKFLOW.yaml\`:
 
+- \`mdd.depth: enterprise\` (default del scaffold; no desactivar)
 - \`pipeline.mode\`: \`monolithic\` (LOW/MEDIUM) o \`high_split\` (HIGH)
 - Resetear agentes a \`pending\` (o \`skipped\` según rama)
 - \`pipeline.current_agent: clarifier\`

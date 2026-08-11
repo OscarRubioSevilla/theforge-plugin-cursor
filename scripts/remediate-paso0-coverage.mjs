@@ -22,6 +22,7 @@ import {
   injectSection0,
   appendSection10,
 } from "./paso0-coverage-lib.mjs";
+import { inferFixTargetFromBlockers } from "./validate-mdd-depth.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = join(__dirname, "..");
@@ -63,6 +64,45 @@ function parseArgs(argv) {
     }
   }
   return opts;
+}
+
+function buildEnterpriseDepthHints(report) {
+  const hints = [];
+  const missing = report.missingBySection ?? {};
+  if ((missing.section4_apiRouteFamilies ?? []).length > 0) {
+    hints.push(
+      "§4: ejecutar /forge-api-contracts — cada mutación con ### METHOD /path + JSON request/response + 4xx (ratio ≥60%).",
+    );
+  }
+  if ((missing.section5_businessRules ?? []).length > 0) {
+    hints.push(
+      "§5: ejecutar /forge-section5 — bloque ```gherkin por cada businessRules[] (RN-xx/BR-xxx + D-IDs).",
+    );
+  }
+  if ((missing.section3_canonicalEntities ?? []).length > 0) {
+    hints.push(
+      "§3: ejecutar /forge-data-model — CREATE TABLE + TechnicalMetadata + erDiagram por entidad canónica faltante.",
+    );
+  }
+  return hints;
+}
+
+function tryEnterpriseDepthHints(opts, log) {
+  try {
+    const out = execSync(
+      `node "${join(__dirname, "validate-mdd-depth.mjs")}" --json-only --mdd "${opts.mdd}" --catalog "${opts.catalog}"`,
+      { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
+    );
+    const depth = JSON.parse(out);
+    if (!depth.ok && depth.blockers?.length) {
+      log.enterprise_depth_hints = depth.blockers.slice(0, 8).map((b) => ({
+        blocker: b,
+        fix_target: inferFixTargetFromBlockers([b]),
+      }));
+    }
+  } catch {
+    // validate:mdd-depth falló — ignorar en remediation Paso 0
+  }
 }
 
 function findEntity(catalog, term) {
@@ -577,6 +617,14 @@ function main() {
   }
 
   log.finishedAt = new Date().toISOString();
+
+  const lastReport = validatePaso0MddCoverage({
+    catalog: loadCatalog(opts.catalog),
+    mdd: loadMdd(opts.mdd),
+  });
+  log.enterprise_coverage_hints = buildEnterpriseDepthHints(lastReport);
+  tryEnterpriseDepthHints(opts, log);
+
   mkdirSync(dirname(opts.log), { recursive: true });
   writeFileSync(opts.log, `${JSON.stringify(log, null, 2)}\n`, "utf8");
 

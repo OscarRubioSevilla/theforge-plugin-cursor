@@ -1,6 +1,6 @@
 # Forge Arquitecto de Seguridad (§6) (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 > **Opcional:** solo si el critic o delivery gate lo exige.
 
@@ -20,11 +20,11 @@ Nodo Forge: `security`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+Leer prompt empaquetado: `prompts/mdd/security-architect-prompt.md`
 
-`prompts/mdd/security-architect-prompt.md`
+Ruta(s): `prompts/mdd/security-architect-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
 - Solo §6; subsecciones con ≥3 viñetas reales
 - Coherencia con §3 (MFA, RBAC, audit)

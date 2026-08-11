@@ -1,6 +1,6 @@
 # Forge Ingeniero §5 Lógica y Edge Cases (pipeline MDD local)
 
-**No usar The Forge API.**
+**No usar The Forge API.** Profundidad MDD **enterprise siempre activa**.
 
 ## Rol
 
@@ -9,7 +9,9 @@ Nodo Forge: `section5`. Paridad con grafo MDD one-shot.
 ## Entradas
 
 - docs/sdd/.pipeline/clarifier-output.md
-- §1–§4 consolidados (drafts o mdd-after-architect)
+- docs/sdd/.pipeline/api-contracts-draft.md (**completo**, con JSON §4)
+- §1–§3 consolidados (drafts o mdd-after-architect)
+- paso0/decisions.catalog.json (`businessRules[]`)
 - paso0/domain-benchmark.md
 
 ## Salidas
@@ -18,16 +20,17 @@ Nodo Forge: `section5`. Paridad con grafo MDD one-shot.
 
 ## Prompt Forge (referencia)
 
-Leer prompt empaquetado en el plugin Forge SDD:
+**Leer prompt completo** en `prompts/mdd/section5-prompt.md` (no resumir ni omitir secciones enterprise).
 
-`prompts/mdd/section5-prompt.md`
+Ruta(s): `prompts/mdd/section5-prompt.md`
 
-Obligaciones clave (resumen; no copiar el prompt completo):
+Obligaciones clave (resumen; **no sustituye** leer el prompt completo):
 
-- ≥4 reglas BDD/AAA o ≥8 viñetas sustantivas
-- Dueño de `businessRules[]` → §5: cada **RN-xx** del catálogo con D-IDs
-- RN-XX → BR-XXX + D-IDs; ≥2 escenarios Gherkin
-- Cada mutación §4.A con comportamiento/error documentado
+- Gherkin: bloque ```gherkin por cada `businessRules[]` (mín. min(BR,8) o 2×BR si BR≤4)
+- Cada RN-xx/BR-xxx del catálogo citado en §5 con D-IDs
+- ≥ min(4, businessRules.length) subsecciones ### sustantivas
+- Cada mutación §4.A con comportamiento/error documentado (4xx, reglas violadas)
+- Límite 12000 chars salvo catálogo >10 BR
 
 ## Actualizar WORKFLOW.yaml
 
