@@ -1,0 +1,11 @@
+{
+  "name": "{{slug}}-sdd",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ui": "node scripts/serve-sdd-ui.mjs"
+  },
+  "dependencies": {
+    "yaml": "^2.7.0"
+  }
+}

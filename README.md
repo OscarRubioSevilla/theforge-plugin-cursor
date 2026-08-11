@@ -57,7 +57,14 @@ npm run init-forge -- --no-cursor --target ~/proyectos/mi-app-sdd --name "Mi App
 /init-forge name="Mi App" idea="Descripción del producto"
 ```
 
-`--no-cursor` crea solo artefactos del proyecto (`WORKFLOW.yaml`, `paso0/`, `docs/sdd/`, `deliverables/`, `ui/`, scripts de panel). Los comandos `/forge-*` vienen del plugin.
+`--no-cursor` crea solo artefactos del proyecto (`WORKFLOW.yaml`, `paso0/`, `docs/sdd/`, `deliverables/`, `ui/`, `package.json`, scripts de panel). Los comandos `/forge-*` vienen del plugin.
+
+Tras el scaffold, instala dependencias del panel UI una vez:
+
+```bash
+cd <tu-proyecto-sdd>
+npm install
+```
 
 ### Flujo típico
 
@@ -68,9 +75,12 @@ npm run init-forge -- --no-cursor --target ~/proyectos/mi-app-sdd --name "Mi App
 
 ## Panel UI
 
+Cada proyecto scaffolded incluye un `package.json` con la dependencia `yaml` (lectura de `WORKFLOW.yaml`).
+
 ```bash
 cd <tu-proyecto-sdd>
-node scripts/serve-sdd-ui.mjs
+npm install   # solo la primera vez
+npm run ui
 # http://localhost:4173
 ```
 

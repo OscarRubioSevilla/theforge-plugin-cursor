@@ -328,6 +328,12 @@ function main() {
     copyFile(join(PACKAGE_ROOT, "scripts", script), join(target, "scripts", script));
   }
 
+  const packageStub = readText(join(TEMPLATES_DIR, "package.stub.json")).replace(
+    /\{\{slug\}\}/g,
+    slug,
+  );
+  writeText(join(target, "package.json"), packageStub);
+
   if (!opts.noCursor) {
     const targetCursor = join(target, ".cursor");
     ensureDir(targetCursor);
@@ -398,13 +404,14 @@ function main() {
   console.log("");
   console.log("Próximo paso:");
   console.log("  1. Abre esta carpeta como workspace en Cursor (si aún no lo está).");
+  console.log("  2. Instala dependencias del panel UI: npm install");
   if (opts.noCursor) {
-    console.log("  2. Comandos /forge-* vienen del plugin Forge SDD instalado.");
-    console.log("  3. En el chat: /forge-paso0");
-    console.log("  4. (Opcional) Panel visual: node scripts/serve-sdd-ui.mjs");
+    console.log("  3. Comandos /forge-* vienen del plugin Forge SDD instalado.");
+    console.log("  4. En el chat: /forge-paso0");
+    console.log("  5. (Opcional) Panel visual: npm run ui");
   } else {
-    console.log("  2. En el chat: /forge-paso0");
-    console.log("  3. (Opcional) Panel visual: node scripts/serve-sdd-ui.mjs");
+    console.log("  3. En el chat: /forge-paso0");
+    console.log("  4. (Opcional) Panel visual: npm run ui");
   }
   console.log("");
 }
