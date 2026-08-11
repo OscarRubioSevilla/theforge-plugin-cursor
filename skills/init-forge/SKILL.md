@@ -4,6 +4,7 @@ description: >-
   Inicializa un workspace SDD (WORKFLOW.yaml, Paso 0, docs/sdd, deliverables, ui).
   Usar cuando el usuario diga init_forge, init forge, scaffold SDD o nuevo proyecto forge.
   Con el plugin Forge SDD instalado, no copiar .cursor/ (comandos vienen del plugin).
+disable-model-invocation: true
 ---
 
 # Init Forge — scaffold SDD

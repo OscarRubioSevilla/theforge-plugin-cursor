@@ -28,6 +28,19 @@ ln -sf "$(pwd)/theforge-plugin-cursor" ~/.cursor/plugins/local/forge-sdd
 
 En Cursor: **Developer: Reload Window**. Verifica en **Settings → Customize → Plugins** que aparece **Forge SDD**.
 
+### Instalación de commands (`/forge-*`, `/init-forge`)
+
+El plugin expone **skills** y **rules** vía `~/.cursor/plugins/local/`, pero los **commands** de plugins locales **no aparecen** de forma fiable en el menú `/` del chat (limitación conocida de Cursor). Usa una de estas opciones:
+
+| Opción | Cómo |
+|--------|------|
+| **A — Recomendado** | Tras instalar el plugin, ejecuta `npm run install:commands` en este repo. Crea symlinks de `commands/*.md` en `~/.cursor/commands/`. |
+| **B — Skills** | Invoca `/init-forge` o `/forge-workflow` (skills con invocación explícita). |
+
+Tras `install:commands`, recarga Cursor: **Cmd+Shift+P → Developer: Reload Window** y prueba `/forge-paso0` o `/init-forge`.
+
+Activa también **Settings → Include third-party Plugins, Skills, and other configs** si los skills del plugin no cargan.
+
 ### Instalación desde GitHub (sin clone manual)
 
 También puedes apuntar el symlink a cualquier ruta donde hayas clonado el repo.

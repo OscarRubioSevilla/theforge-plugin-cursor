@@ -3,6 +3,7 @@ name: forge-workflow
 description: >-
   Orquesta el flujo SDD local (Paso 0 → Spec → MDD multi-agente → gates → entregables)
   sin API de The Forge. Usar con WORKFLOW.yaml, pipeline MDD o slash commands /forge-*.
+disable-model-invocation: true
 ---
 
 # Forge Workflow (Cursor-native)
