@@ -73,6 +73,23 @@ npm install
 3. `/forge-mdd-pipeline` (o `/forge-mdd` para demo YAGNI)  
 4. `/forge-gate` — validación y cierre  
 
+## Calidad MDD (delivery gate local)
+
+El plugin incluye validadores deterministas alineados con el delivery gate de The Forge:
+
+```bash
+npm run validate:paso0-coverage   # catálogo Paso 0 → secciones MDD
+npm run validate:mdd-depth        # profundidad §1–§7, endpoints, Gherkin, manifest §7
+```
+
+`validate:mdd-depth` detecta MDDs **delgados** (secciones placeholder) y **contaminados** (D-IDs o patrones §0 copiados de otro dominio, p. ej. Workspace Chat en un proyecto Beauty Ride). Umbral: **score ≥ 90**, sin blockers. Informe en `deliverables/mdd-depth-report.json`.
+
+Reglas anti-contaminación:
+
+- Solo citar D-IDs de `paso0/decisions.catalog.json`
+- §0 patrones de desarrollo **solo** si el catálogo declara `architecturePatterns[]`
+- Tras `/forge-prepare-output`, ejecutar ambos validadores antes de marcar `gates.mdd`
+
 ## Panel UI
 
 Cada proyecto scaffolded incluye un `package.json` con la dependencia `yaml` (lectura de `WORKFLOW.yaml`).

@@ -122,47 +122,84 @@ export function stripSectionsForCoverageScan(markdown) {
   return m;
 }
 
-/** Bloque §0 — patrones inmutables derivados del catálogo Paso 0. */
-export function buildSection0Markdown(_catalog) {
-  return `## [ARQUITECTURA — SECCIÓN INMUTABLE] CONFIGURACIÓN DE PATRONES DE DESARROLLO
+/** True si el catálogo declara patrones de arquitectura explícitos. */
+export function catalogHasArchitecturePatterns(catalog) {
+  const patterns =
+    catalog?.architecturePatterns ?? catalog?.developmentPatterns ?? [];
+  return Array.isArray(patterns) && patterns.length > 0;
+}
 
-### Patrones activos (SSOT)
+/** D-IDs válidos declarados en cualquier campo del catálogo Paso 0. */
+export function listCatalogDecisionIds(catalog) {
+  const ids = new Set();
+  const add = (list) => {
+    for (const id of list ?? []) {
+      if (typeof id === "string" && /^D-\d+$/.test(id)) ids.add(id);
+    }
+  };
+  for (const d of catalog?.decisions ?? []) {
+    if (d?.id) ids.add(d.id);
+  }
+  for (const e of catalog?.entities ?? []) add(e.decisionIds);
+  for (const r of catalog?.businessRules ?? []) add(r.decisionIds);
+  for (const c of catalog?.mvpCapabilities ?? []) add(c.decisionIds);
+  for (const o of catalog?.outOfScope ?? []) add(o.decisionIds);
+  for (const r of catalog?.risks ?? []) add(r.decisionIds);
+  for (const f of catalog?.mandatoryApiRouteFamilies ?? []) add(f.decisionIds);
+  for (const p of catalog?.architecturePatterns ?? catalog?.developmentPatterns ?? []) {
+    add(p.decisionIds);
+  }
+  return [...ids].sort();
+}
 
-#### 🏛️ 1. Arquitectura global y distribuida
-- [X] **Arquitectura Hexagonal (Ports & Adapters)** — aísla el dominio de adaptadores de aplicación productora, persistencia y transporte. Requisito para que el núcleo sea reutilizable entre aplicaciones (D-002).
-- [X] **Monolito Modular** — una unidad de despliegue con módulos de negocio separados. Coherente con la operación proporcional confirmada (D-111).
-- [X] **Event-Driven Architecture (EDA)** — recepción asíncrona de eventos de negocio (D-080, D-141).
+/** Elimina bloque §0 inmutable si existe. */
+export function removeSection0(markdown) {
+  const m = markdown ?? "";
+  if (!hasSection0(m)) return m;
+  return m
+    .replace(
+      /##\s+\[ARQUITECTURA\s*[—–-]\s*SECCIÓN INMUTABLE\][\s\S]*?(?=^##\s+1\.)/im,
+      "",
+    )
+    .replace(/^\n{3,}/m, "\n\n");
+}
 
-#### 🔌 2. Estructurales (GoF)
-- [X] **Facade** — interfaz unificada por superficie de cliente.
-- [X] **Adapter** — un adaptador por aplicación productora; traduce su semántica al contrato canónico sin filtrarla al núcleo (D-115, D-005).
+/** Bloque §0 — solo patrones declarados en el catálogo Paso 0. */
+export function buildSection0Markdown(catalog) {
+  if (!catalogHasArchitecturePatterns(catalog)) return "";
 
-#### 🧠 3. Comportamiento (GoF)
-- [X] **Observer / Pub-Sub** — distribución de actividad en tiempo real (D-126).
-- [X] **State** — máquinas de estado de adjunto (cuarentena), invocación de agente y trabajo de migración.
+  const catalogIds = new Set(listCatalogDecisionIds(catalog));
+  const patterns =
+    catalog.architecturePatterns ?? catalog.developmentPatterns ?? [];
 
-#### 💾 4. Persistencia y datos
-- [X] **Repository** y **Data Mapper** — independencia del dominio respecto del motor, exigida por D-162.
-- [X] **Soft Delete / Tombstone** — toda eliminación es lógica (D-023, D-136).
+  const lines = [
+    "## [ARQUITECTURA — SECCIÓN INMUTABLE] CONFIGURACIÓN DE PATRONES DE DESARROLLO",
+    "",
+    "### Patrones activos (SSOT — catálogo Paso 0)",
+    "",
+  ];
 
-#### 🛡️ 5. Integración, APIs y resiliencia
-- [X] **API Gateway** — punto único de entrada, autenticación y rate limiting.
-- [X] **BFF (Backend For Frontend)** — tres superficies: embebida, central y móvil (D-123, D-044, D-078).
-- [X] **Circuit Breaker** — protege frente a degradación de dependencias externas.
-- [X] **Outbox Pattern** — publicación confiable de eventos (D-010).
-- [X] **Idempotent Receiver** — deduplicación por \`source_application + event_id\` (D-080).
+  for (const pattern of patterns) {
+    const name = pattern.name ?? pattern.title ?? "Patrón";
+    const rationale = pattern.rationale ?? pattern.description ?? "";
+    const ids = (pattern.decisionIds ?? []).filter((id) => catalogIds.has(id));
+    const idSuffix = ids.length ? ` (${ids.join(", ")})` : "";
+    lines.push(`- [X] **${name}**${idSuffix}${rationale ? ` — ${rationale}` : ""}`);
+  }
 
-#### ❌ Patrones explícitamente descartados
+  const rejected = catalog.rejectedPatterns ?? catalog.excludedPatterns ?? [];
+  if (rejected.length > 0) {
+    lines.push("", "#### ❌ Patrones explícitamente descartados", "");
+    lines.push("| Patrón | Motivo |", "|---|---|");
+    for (const item of rejected) {
+      const name = item.name ?? item.pattern ?? "—";
+      const reason = item.reason ?? item.motivo ?? "—";
+      lines.push(`| **${name}** | ${reason} |`);
+    }
+  }
 
-| Patrón | Motivo |
-|---|---|
-| **Strangler Fig** | Implica convivencia y enrutamiento entre sistema legado y nuevo. **D-121 descarta la convivencia operativa**: el corte es por campaña, con congelamiento de escritura, delta final, validación y solo lectura temporal. D-070 prohíbe Teams como puente. |
-| **Multi-tenancy** | **D-095** clasifica \`tenant_id\` como frontera futura y **distinta** de \`application_id\`. El eje de aislamiento del MVP es la aplicación (D-093). |
-| **CQRS / Event Sourcing** | No hay decisión que lo respalde. El volumen inicial no lo justifica (A-006). |
-
----
-
-`;
+  lines.push("", "---", "");
+  return `${lines.join("\n")}\n`;
 }
 
 export function buildSection10Markdown({
@@ -184,13 +221,15 @@ export function buildSection10Markdown({
 }
 
 export function injectSection0(markdown, catalog) {
-  if (hasSection0(markdown)) return markdown;
+  let m = removeSection0(markdown);
+  if (!catalogHasArchitecturePatterns(catalog)) return m;
   const section0 = buildSection0Markdown(catalog);
+  if (!section0.trim()) return m;
   const anchor = /^##\s+1\./m;
-  if (anchor.test(markdown)) {
-    return markdown.replace(anchor, `${section0}$&`);
+  if (anchor.test(m)) {
+    return m.replace(anchor, `${section0}$&`);
   }
-  return `${markdown.trimEnd()}\n\n${section0}`;
+  return `${m.trimEnd()}\n\n${section0}`;
 }
 
 export function appendSection10(markdown, options = {}) {
@@ -353,10 +392,17 @@ export function validatePaso0MddCoverage({ catalog, mdd, includeWarnings = false
     }
   }
 
-  // section0 — patrones inmutables
-  if (!hasSection0(corpus)) {
-    missingBySection.section0_patterns.push("## [ARQUITECTURA — SECCIÓN INMUTABLE]");
-    blockers.push("§0: falta sección inmutable de patrones de desarrollo");
+  // section0 — patrones inmutables (solo si el catálogo los declara)
+  if (catalogHasArchitecturePatterns(catalog)) {
+    if (!hasSection0(corpus)) {
+      missingBySection.section0_patterns.push("## [ARQUITECTURA — SECCIÓN INMUTABLE]");
+      blockers.push("§0: falta sección inmutable de patrones de desarrollo (catálogo declara architecturePatterns)");
+    }
+  } else if (hasSection0(corpus)) {
+    missingBySection.section0_patterns.push("§0_contaminada");
+    blockers.push(
+      "§0: bloque de patrones presente pero el catálogo no declara architecturePatterns — eliminar contaminación de otro dominio",
+    );
   }
 
   // section9

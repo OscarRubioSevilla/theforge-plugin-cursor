@@ -28,7 +28,8 @@
     "build:plugin": "npm run vendor-prompts && npm run generate:commands",
     "init-forge": "node scripts/init-forge.mjs",
     "install:commands": "node scripts/install-global-commands.mjs",
-    "ui": "node scripts/serve-sdd-ui.mjs"
+    "ui": "node scripts/serve-sdd-ui.mjs",
+    "validate:mdd-depth": "node scripts/validate-mdd-depth.mjs"
   },
   "dependencies": {
     "yaml": "^2.8.1"

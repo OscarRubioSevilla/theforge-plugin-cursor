@@ -55,8 +55,30 @@ npm run validate:paso0-coverage
 | paso0 | benchmark + JSON válido; decisiones con D-ID |
 | spec | sin clarificaciones abiertas |
 | **paso0_mdd_coverage** | validate sin blockers; umbrales 100 % |
-| mdd | 7 secciones; **requiere paso0_mdd_coverage** |
+| **mdd_depth** | `npm run validate:mdd-depth` — score ≥ 90, sin D-IDs extranjeros, §4/§5/§7 sustanciales |
+| mdd | 7 secciones; **requiere paso0_mdd_coverage + mdd_depth** |
 | delivery | tasks + artefacto en deliverables/ |
+
+## Gate profundidad MDD (`validate:mdd-depth`)
+
+Tras merge en `/forge-prepare-output` y antes de marcar `gates.mdd`:
+
+```bash
+npm run validate:mdd-depth
+```
+
+Comprueba (paridad con delivery gate de The Forge):
+
+| Check | Umbral |
+|-------|--------|
+| §1,2,4,5,6,7 cuerpo | ≥ 200 chars (§3 ≥ 100 si CREATE TABLE) |
+| §4 endpoints | escala con decisiones (≥15 pequeño, ≥40 si 50+ D-IDs) |
+| §5 profundidad | ≥4 `###` o ≥8 viñetas; ≥2 bloques Gherkin |
+| §7 manifest | bloque JSON con stack/deployment/security |
+| D-IDs | ningún D-XXX fuera del catálogo Paso 0 |
+| Score | ≥ 90, exit 0 |
+
+Informe: `deliverables/mdd-depth-report.json`. **No marcar `gates.mdd: passed` si falla.**
 
 ## Comandos
 

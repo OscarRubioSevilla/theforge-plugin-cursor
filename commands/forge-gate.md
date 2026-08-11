@@ -12,6 +12,7 @@ Antes de evaluar `gates.mdd` o `gates.delivery`, ejecutar desde la raíz del wor
 
 ```bash
 npm run validate:paso0-coverage
+npm run validate:mdd-depth
 ```
 
 Si hay blockers y aún no se ejecutó remediation en el pipeline:
@@ -23,9 +24,9 @@ npm run remediate:paso0-coverage
 O usar `/forge-paso0-coverage-remediation` (paso 13 del pipeline MDD).
 
 - Lee `paso0/decisions.catalog.json` + `docs/sdd/mdd.md`
-- Escribe `deliverables/paso0-coverage-report.json`
-- **Exit code 1** si `blockers.length > 0` → gate `paso0_mdd_coverage` = **failed**
-- No marcar `gates.mdd.status: passed` sin `gates.paso0_mdd_coverage.status: passed`
+- Escribe `deliverables/paso0-coverage-report.json` y `deliverables/mdd-depth-report.json`
+- **Exit code 1** si `blockers.length > 0` o score depth < 90 → gate `paso0_mdd_coverage` / `mdd` = **failed**
+- No marcar `gates.mdd.status: passed` sin `gates.paso0_mdd_coverage.status: passed` **y** `validate:mdd-depth` exit 0
 
 ## Gates a evaluar
 
@@ -34,7 +35,7 @@ O usar `/forge-paso0-coverage-remediation` (paso 13 del pipeline MDD).
 | **paso0** | `paso0/domain-benchmark.md` + `paso0/decisions.catalog.json` válido; paridad D-IDs |
 | **spec** | Sin clarificaciones abiertas; RF con D-IDs; sin stack en spec |
 | **paso0_mdd_coverage** | `validate:paso0-coverage` sin blockers; umbrales en `WORKFLOW.yaml` |
-| **mdd** | 7 secciones + checklist profundidad; **depende de paso0_mdd_coverage** |
+| **mdd** | 7 secciones + checklist profundidad + **`validate:mdd-depth` score ≥ 90**; **depende de paso0_mdd_coverage** |
 | **delivery** | `tasks.md`, `blueprint.md`, bundle en `deliverables/` |
 
 ## Gate `paso0_mdd_coverage` (bloqueante)
@@ -96,10 +97,12 @@ Validar cada ítem (detalle en la skill **forge-workflow** del plugin):
 - [ ] Seguridad acotada al alcance (sin auth OWASP si no hay login).
 - [ ] Manifest JSON con `stack`, `deployment`, `security`, `integration_metadata`.
 
-### Trazabilidad
+### Trazabilidad y D-IDs
 
 - [ ] Tabla RF ↔ D-IDs ↔ secciones MDD coherente con `docs/sdd/spec.md` §7.
 - [ ] `paso0-coverage-report.json` con `passed: true`.
+- [ ] `mdd-depth-report.json` con `ok: true` y score ≥ 90.
+- [ ] **Sin D-IDs extranjeros** al catálogo Paso 0 (p. ej. D-080/D-121 copiados de otro dominio).
 
 ## Gate delivery
 
@@ -110,7 +113,7 @@ Validar cada ítem (detalle en la skill **forge-workflow** del plugin):
 
 ## Salida
 
-1. Resultado de `npm run validate:paso0-coverage` (blockers count).
+1. Resultado de `npm run validate:paso0-coverage` y `npm run validate:mdd-depth` (blockers count, score).
 2. Informe breve por gate (passed / failed + hallazgos).
 3. Autofix triviales (typos D-ID, claves JSON, headings).
 4. Actualizar `WORKFLOW.yaml` y `phase` según resultado global.

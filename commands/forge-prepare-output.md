@@ -25,12 +25,14 @@ Leer prompt empaquetado en el plugin Forge SDD:
 Obligaciones clave (resumen; no copiar el prompt completo):
 
 - Merge §1–§7 desde sidecars; eliminar placeholders
-- Inyectar §0 (patrones inmutables) antes de §1; append §10 Registro de cambios tras §9
+- Inyectar §0 **solo si** el catálogo declara `architecturePatterns[]`; si no, **no** añadir wizard de patrones
+- Append §10 Registro de cambios tras §9
 - Ejecutar `npm run validate:paso0-coverage`; **no** marcar `paso0_mdd_coverage` si hay blockers
+- Ejecutar `npm run validate:mdd-depth`; **no** marcar `gates.mdd` si score < 90 o hay blockers
 - Asegurar §8 UI/UX y §9 Trazabilidad (plantilla: `paso0/mdd-sections-template.md`)
-- Evaluar delivery gate (umbral 90, MIN_SECTION_BODY 200 chars, §3 ≥100)
+- Evaluar delivery gate (umbral 90, MIN_SECTION_BODY 200 chars, §3 ≥100 si CREATE TABLE)
 - Si falla: marcar fix_target y re-enrutar agente (max 2 iteraciones)
-- Si delivery gate ok: marcar agente `passed`; **siguiente** `/forge-paso0-coverage-remediation`
+- Si ambos gates ok: marcar agente `passed`; **siguiente** `/forge-paso0-coverage-remediation`
 
 ## Actualizar WORKFLOW.yaml
 

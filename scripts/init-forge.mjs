@@ -324,7 +324,13 @@ function main() {
 
   copyDirRecursive(join(PACKAGE_ROOT, "ui"), join(target, "ui"));
   ensureDir(join(target, "scripts"));
-  for (const script of ["serve-sdd-ui.mjs", "workflow-read.util.mjs"]) {
+  for (const script of [
+    "serve-sdd-ui.mjs",
+    "workflow-read.util.mjs",
+    "validate-mdd-depth.mjs",
+    "paso0-coverage-lib.mjs",
+    "validate-paso0-mdd-coverage.mjs",
+  ]) {
     copyFile(join(PACKAGE_ROOT, "scripts", script), join(target, "scripts", script));
   }
 

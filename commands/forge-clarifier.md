@@ -31,8 +31,10 @@ Obligaciones clave (resumen; no copiar el prompt completo):
 - §1 en español: propósito, fronteras DDD, actores, glosario (solo términos del alcance), UAT si aplica
 - Dueño de catálogo → §1: `mvpCapabilities`, `outOfScope`, `entities` (glosario), `risks` (R-xxx o mitigación)
 - Cada término de `entities[]` debe aparecer en el glosario §1; cada `outOfScope[]` como viñeta explícita
+- **Solo citar D-IDs presentes en `paso0/decisions.catalog.json`** — prohibido D-IDs de otros proyectos
+- §0 patrones: **omitir** salvo que el catálogo declare `architecturePatterns[]`; prohibido copiar bloques Workspace Chat / Strangler / BFF×3
 - §2–§7 como placeholders de una línea en primera pasada
-- clarifiedScope explícito: entidades, capacidades, D-IDs, instrucciones para arquitectos
+- clarifiedScope explícito: entidades, capacidades, D-IDs del catálogo, instrucciones para arquitectos
 - Respetar stack declarado en Paso 0; no sustituir por stack «de mercado»
 - Sin JSON crudo ni [object Object] en §1
 
