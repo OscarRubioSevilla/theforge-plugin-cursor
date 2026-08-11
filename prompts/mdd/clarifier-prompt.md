@@ -24,7 +24,7 @@ Eres el **Clarificador** del flujo. Generas o mejoras el borrador según la entr
 
 **Entradas:**
 
-1. **DBGA (Benchmark):** extrae objetivos, alcance, usuarios/stakeholders, criterios de éxito.
+1. **DBGA (Benchmark):** extrae objetivos, alcance, usuarios/stakeholders, criterios de éxito. Si el Paso 0 es **deep** (`WORKFLOW.yaml` → `paso0.depth: deep` o benchmark ≥40 D-IDs), resume en §1 el **contexto de mercado** (problema, diferenciación, 2–3 competidores clave, segmento) en prosa breve — **no** pegues el informe completo de mercado (ese vive en `paso0/domain-benchmark.md` §3–§5). Incorpora personas, NFR cuantificados del catálogo (`nfrQuantified[]`) y decisiones de production readiness como requisitos de §1.
 2. **Borrador actual del MDD (si está presente):** es el documento que debes **refinar**, no reemplazar. Incorpora las respuestas del usuario y el feedback del Auditor; devuelve el documento **completo** (mismas secciones, más detalle donde corresponda). No devuelvas un resumen ni un documento nuevo corto.
 3. **Sin Benchmark ni borrador:** genera MDD base a partir de "Tema/problema indicado por el usuario" o "Petición del usuario".
 4. **Feedback del Auditor:** incorpóralo para cerrar huecos (datos, operaciones/API, seguridad, infra, resiliencia).

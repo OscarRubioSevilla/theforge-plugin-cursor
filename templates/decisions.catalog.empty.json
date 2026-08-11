@@ -1,8 +1,36 @@
 {
+  "_comment": "Catálogo Paso 0 — SSOT de D-IDs para Spec, MDD y gates. Sincronizar con paso0/domain-benchmark.md (ver paso0/TEMPLATE.md §19).",
+  "_schema": {
+    "required": ["kind", "version", "decisions", "mvpCapabilities", "entities", "outOfScope"],
+    "coverageFields": [
+      "canonicalEntities",
+      "mandatoryApiRouteFamilies",
+      "businessRules",
+      "risks"
+    ],
+    "optionalMetadata": [
+      "architecturePatterns",
+      "rejectedPatterns",
+      "personas",
+      "competitors",
+      "nfrQuantified",
+      "productionChecklist"
+    ]
+  },
   "kind": "paso0_decision_catalog",
   "version": 1,
   "decisions": [],
   "mvpCapabilities": [],
   "entities": [],
-  "outOfScope": []
+  "outOfScope": [],
+  "canonicalEntities": [],
+  "mandatoryApiRouteFamilies": [],
+  "businessRules": [],
+  "risks": [],
+  "architecturePatterns": [],
+  "rejectedPatterns": [],
+  "personas": [],
+  "competitors": [],
+  "nfrQuantified": [],
+  "productionChecklist": []
 }

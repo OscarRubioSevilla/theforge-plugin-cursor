@@ -73,6 +73,21 @@ npm install
 3. `/forge-mdd-pipeline` (o `/forge-mdd` para demo YAGNI)  
 4. `/forge-gate` — validación y cierre  
 
+### Paso 0 profundo
+
+Por defecto el scaffold define `paso0.depth: deep` en `WORKFLOW.yaml`. El Paso 0 profundo produce un **Domain Benchmark** de 800–2000 líneas con **40–80 decisiones (D-IDs)**, incluyendo:
+
+- Análisis de mercado y competencia (el agente puede usar búsqueda web)
+- Personas y jobs-to-be-done
+- Modelo de negocio y unit economics
+- Modelo operativo (soporte, fraude, disputas, SLA)
+- Checklist de **production readiness** (auth, observabilidad, backups, CI/CD, rate limits)
+- Entidades canónicas, familias API, reglas BR-xxx y NFR cuantificados
+
+Guía para el agente: `paso0/DEEP-PASO0-GUIDE.md`. Modo rápido: `paso0.depth: standard` (~20 D-IDs).
+
+Un Paso 0 escaso (~18 D-IDs) suele generar un MDD de ~640 líneas; un Paso 0 deep (50+ D-IDs) alimenta un MDD de **1000+ líneas** tras el pipeline multi-agente.
+
 ## Calidad MDD (delivery gate local)
 
 El plugin incluye validadores deterministas alineados con el delivery gate de The Forge:

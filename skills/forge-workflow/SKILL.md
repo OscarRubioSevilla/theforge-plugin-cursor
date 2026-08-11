@@ -35,6 +35,27 @@ idea → paso0 → spec → mdd → mdd_pipeline → gates → deliverables → 
 
 Tras completar cada fase, actualizar `WORKFLOW.yaml` (`phase`, `gates.*.status`, `pipeline.*`).
 
+## Paso 0 — profundidad (`paso0.depth`)
+
+| Modo | D-IDs | Benchmark | Cuándo |
+|------|-------|-----------|--------|
+| **deep** (default) | 40–80 (~50) | 800–2000 líneas | MVP desplegable, producto real |
+| **standard** | ~20 | 300–600 líneas | Spikes, demos YAGNI |
+
+Configurar en `WORKFLOW.yaml`:
+
+```yaml
+paso0:
+  depth: deep  # deep | standard
+  target_decision_count: 50
+```
+
+Playbook del agente: **`paso0/DEEP-PASO0-GUIDE.md`**. Plantilla: `paso0/TEMPLATE.md`.
+
+Modo **deep** obliga: análisis de mercado (búsqueda web), personas, NFR cuantificados, checklist production readiness, entidades canónicas, familias API, reglas BR-xxx y sync completo de `decisions.catalog.json` (incl. metadata opcional: `personas`, `competitors`, `nfrQuantified`, `productionChecklist`, `architecturePatterns`).
+
+Referencia de calidad: Paso 0 ~18 D-IDs → MDD ~640 líneas; Paso 0 deep 50+ D-IDs → MDD 1000+ líneas tras pipeline.
+
 ## Pipeline MDD multi-agente
 
 Orquestador: `/forge-mdd-pipeline`. Secuencia: clarifier → arquitectos → critic → section5 → formatter → security-integration → consistency/diagram → auditor → prepare-output → paso0-coverage-remediation.

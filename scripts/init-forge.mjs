@@ -298,6 +298,10 @@ function main() {
   ensureDir(join(target, "paso0"));
   copyFile(join(PACKAGE_ROOT, "paso0/TEMPLATE.md"), join(target, "paso0/TEMPLATE.md"));
   copyFile(
+    join(PACKAGE_ROOT, "paso0/DEEP-PASO0-GUIDE.md"),
+    join(target, "paso0/DEEP-PASO0-GUIDE.md"),
+  );
+  copyFile(
     join(PACKAGE_ROOT, "paso0/mdd-sections-template.md"),
     join(target, "paso0/mdd-sections-template.md"),
   );
